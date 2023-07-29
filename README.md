@@ -3,11 +3,11 @@ Repository for quantum correlations investigation with the usage of neural netwo
 
 Entanglement Datasets:
 - Test:
-    -pure_test
-    -mixed_test_ext / mixed_test_val
-    -pptes_2xd
-    -pptes_acin100
-    -pptes_bennet
+    - pure_test
+    - mixed_test_ext / mixed_test_val
+    - pptes_2xd
+    - pptes_acin100
+    - pptes_bennet
 - Train:
     - train_balanced_nopptes_ext
     - train_balanced_wks_ne
