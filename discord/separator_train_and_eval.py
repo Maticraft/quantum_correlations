@@ -4,9 +4,10 @@ import torch
 import torch.nn as nn
 from torch.utils.data import Dataset, DataLoader
 import numpy as np
+from commons.models.cnns import CNN
 from commons.models.separators import FancySeparator, Separator, SiameseFancySeparator
 
-from commons.pytorch_utils import train, test, save_acc, CNN, CombinedSeparator, train_separator, train_siamese_separator, test_separator, test_separator_as_classifier
+from commons.pytorch_utils import train, test, save_acc, CombinedSeparator, train_separator, train_siamese_separator, test_separator, test_separator_as_classifier
 
 
 class DensityMatricesDataset(Dataset):

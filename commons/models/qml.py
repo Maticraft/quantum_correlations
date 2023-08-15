@@ -7,7 +7,7 @@ from qiskit.circuit.library import RealAmplitudes, ZZFeatureMap
 from qiskit_machine_learning.neural_networks import CircuitQNN
 from qiskit_machine_learning.connectors import TorchConnector
 
-from commons.pytorch_utils import CNN
+from commons.models.cnns import CNN
 
 
 class HybridQCNN(CNN):

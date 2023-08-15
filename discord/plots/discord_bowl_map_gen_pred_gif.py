@@ -2,10 +2,12 @@ from re import X
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
+from commons.models.cnns import CNN
+from commons.models.siamese_networks import VectorSiamese
 from commons.metrics import generate_parametrized_qs, global_entanglement_bipartitions
 from math import tan
 from commons.models.separators import FancySeparator
-from commons.pytorch_utils import CNN, VectorSiamese, loc_op_circ, separator_predict, save_acc
+from commons.pytorch_utils import loc_op_circ, separator_predict, save_acc
 import torch
 
 

@@ -2,12 +2,14 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
+from commons.models.cnns import CNN
+from commons.models.siamese_networks import VectorSiamese
 from commons.metrics import generate_parametrized_qs, global_entanglement_bipartitions
 from commons.models.separators import FancySeparator
 from commons.pytorch_utils import loc_op_circ, loc_op, all_perms
 
 import torch
-from commons.pytorch_utils import CNN, VectorSiamese, separator_predict
+from commons.pytorch_utils import separator_predict
 
 # Gif params
 gif_pngs = 100
