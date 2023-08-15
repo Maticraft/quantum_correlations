@@ -12,61 +12,6 @@ from qiskit import Aer
 from commons.data.circuit_ops import permute_matrix, local_randomize_matrix, local_randomization, random_entanglement
 
 
-def rho_reconstruction(x, separator_output):
-    ch = separator_output[0].size()[1] // 2
-    rho = torch.zeros_like(x[:,0,:,:], dtype = torch.cdouble)
-
-    for i in range(ch):
-        dms = separator_output[0]
-        rho_real = dms[:, i, :, :]
-        rho_imag = dms[:, ch + i, :, :]
-        rho_i = torch.complex(rho_real, rho_imag)
-            
-        for j in range(1, len(separator_output)):
-            dms = separator_output[j]
-            ch = dms.size()[1] // 2
-            rho_real = dms[:, i, :, :]
-            rho_imag = dms[:, ch + i, :, :]
-            rho_j = torch.complex(rho_real, rho_imag)      
-            rho_i = torch.stack([torch.kron(rho_i[k], rho_j[k]) for k in range(len(rho_i))])
-        rho += rho_i
-
-    rho = rho / ch
-    rho = torch.stack((rho.real, rho.imag), dim = 1)
-    return rho
-
-
-def sep_met(output, data):
-    ch = output[0].size()[1] // 2
-    rho = torch.zeros_like(data[:,0,:,:], dtype = torch.cdouble)
-    trace_loss = 0
-    hermitian_loss = 0
-
-    for i in range(ch):
-        dms = output[0]
-        rho_real = dms[:, i, :, :]
-        rho_imag = dms[:, ch + i, :, :]
-        rho_i = torch.complex(rho_real, rho_imag)
-            
-        for j in range(1, len(output)):
-            dms = output[j]
-            ch = dms.size()[1] // 2
-            rho_real = dms[:, i, :, :]
-            rho_imag = dms[:, ch + i, :, :]
-            rho_j = torch.complex(rho_real, rho_imag)
-            trace_loss += torch.mean(torch.stack([torch.abs(torch.trace(rho_j[k]) - 1.) for k in range(len(rho_j))]))  
-            hermitian_loss += torch.mean(torch.abs(torch.conj(torch.transpose(rho_j, -1, -2)) - rho_j))          
-            rho_i = torch.stack([torch.kron(rho_i[k], rho_j[k]) for k in range(len(rho_i))])
-        rho += rho_i
-
-    rho = rho / ch
-    rho = torch.stack((rho.real, rho.imag), dim = 1)
-    rho_diff = torch.abs(rho - data)
-    metric = torch.mean(rho_diff.view(data.size()[0], -1), dim=1, keepdim=True) + 0.1 * (trace_loss + hermitian_loss) / (ch * (len(output) - 1))
-    return metric, rho_diff
-
-    
-
 def all_perms(rhos, specified_inds = None):
     rhos = torch.squeeze(rhos[:,0,:,:] + rhos[:,1,:,:]*1.j, dim=1).tolist()
     dms =  [DensityMatrix(matrix) for matrix in rhos]
@@ -263,66 +208,6 @@ def torch_fidelity(rho1, rho2):
 
     fid = torch.linalg.norm(s1sqrt.matmul(s2sqrt), ord="nuc") ** 2
     return fid.to(torch.double)
-
-
-def get_separator_loss(data, output, criterion):
-    ch = output[0].size()[1] // 2
-    rho = torch.zeros_like(data[:, 0, :, :], dtype = torch.cdouble)
-
-    for i in range(ch):
-        dms = output[0]
-        rho_real = dms[:, i, :, :]
-        rho_imag = dms[:, ch + i, :, :]
-        rho_i = torch.complex(rho_real, rho_imag)
-    
-        for j in range(1, len(output)):
-            dms = output[j]
-            ch = dms.size()[1] // 2
-            rho_real = dms[:, i, :, :]
-            rho_imag = dms[:, ch + i, :, :]
-            rho_j = torch.complex(rho_real, rho_imag)           
-            rho_i = torch.stack([torch.kron(rho_i[k], rho_j[k]) for k in range(len(rho_i))])
-        rho += rho_i
-
-    rho = rho / ch
-    if criterion == 'bures':
-        data_complex = torch.complex(data[:, 0, :, :], data[:, 1, :, :])
-        loss = torch.stack([2*(torch.abs(1 - torch.sqrt(torch_fidelity(rho[i], data_complex[i])))) for i in range(data_complex.size()[0])])
-    else:
-        rho = torch.stack((rho.real, rho.imag), dim = 1)
-        loss = criterion(rho, data[:, :2, :, :])
-
-    return loss
-
-
-def get_symmetry_loss(output_1, output_2, qubits_for_sym):
-    loss = 0.
-    ch = output_1[0].size()[1] // 2
-    num_qubits = len(output_1)
-    qubits_for_sym_rev = num_qubits - np.array(qubits_for_sym) - 1
-
-    for i in range(num_qubits):
-        for j in range(ch):
-            rhos_1 = output_1[i]
-            rho_real_1 = rhos_1[:, j, :, :]
-            rho_imag_1 = rhos_1[:, ch + j, :, :]
-            rho_1 = torch.complex(rho_real_1, rho_imag_1)
-
-            rhos_2 = output_2[i]
-            rho_real_2 = rhos_2[:, j, :, :]
-            rho_imag_2 = rhos_2[:, ch + j, :, :]
-            rho_2 = torch.complex(rho_real_2, rho_imag_2)
-
-            rho_1_sym = rho_1
-
-            if i in qubits_for_sym_rev:
-                tmp = rho_1[:, 0, 0]
-                rho_1_sym[:, 0, 0] = rho_1[:, 1, 1]
-                rho_1_sym[:, 1, 1] = tmp
-
-            loss += torch.mean(torch.abs(rho_1_sym - rho_2))
-   
-    return loss / (ch * len(qubits_for_sym))
 
 
 def plot_loss(train_loss, validation_loss, title, log_scale = False):

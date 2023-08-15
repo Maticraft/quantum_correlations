@@ -246,3 +246,27 @@ class Separator(nn.Module):
         output = [out_conv(x) for out_conv in self.output_convs]
 
         return output
+
+
+def rho_reconstruction(x, separator_output):
+    ch = separator_output[0].size()[1] // 2
+    rho = torch.zeros_like(x[:,0,:,:], dtype = torch.cdouble)
+
+    for i in range(ch):
+        dms = separator_output[0]
+        rho_real = dms[:, i, :, :]
+        rho_imag = dms[:, ch + i, :, :]
+        rho_i = torch.complex(rho_real, rho_imag)
+
+        for j in range(1, len(separator_output)):
+            dms = separator_output[j]
+            ch = dms.size()[1] // 2
+            rho_real = dms[:, i, :, :]
+            rho_imag = dms[:, ch + i, :, :]
+            rho_j = torch.complex(rho_real, rho_imag)
+            rho_i = torch.stack([torch.kron(rho_i[k], rho_j[k]) for k in range(len(rho_i))])
+        rho += rho_i
+
+    rho = rho / ch
+    rho = torch.stack((rho.real, rho.imag), dim = 1)
+    return rho

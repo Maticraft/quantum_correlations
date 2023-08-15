@@ -1,7 +1,7 @@
 import torch.nn.functional as F
 from commons.models.cnns import CNN
 from commons.models.separators import FancySeparator, Separator
-from commons.pytorch_utils import rho_reconstruction
+from commons.models.separators import rho_reconstruction
 
 
 import torch
@@ -119,3 +119,33 @@ class FancyClassifier(FancySeparator):
         x_mid = x_mid.view(-1, self.fc_dim)
         out = self.output_fc_layers(x_mid)
         return torch.sigmoid(self.final_layer(out))
+
+
+def sep_met(output, data):
+    ch = output[0].size()[1] // 2
+    rho = torch.zeros_like(data[:,0,:,:], dtype = torch.cdouble)
+    trace_loss = 0
+    hermitian_loss = 0
+
+    for i in range(ch):
+        dms = output[0]
+        rho_real = dms[:, i, :, :]
+        rho_imag = dms[:, ch + i, :, :]
+        rho_i = torch.complex(rho_real, rho_imag)
+
+        for j in range(1, len(output)):
+            dms = output[j]
+            ch = dms.size()[1] // 2
+            rho_real = dms[:, i, :, :]
+            rho_imag = dms[:, ch + i, :, :]
+            rho_j = torch.complex(rho_real, rho_imag)
+            trace_loss += torch.mean(torch.stack([torch.abs(torch.trace(rho_j[k]) - 1.) for k in range(len(rho_j))]))
+            hermitian_loss += torch.mean(torch.abs(torch.conj(torch.transpose(rho_j, -1, -2)) - rho_j))
+            rho_i = torch.stack([torch.kron(rho_i[k], rho_j[k]) for k in range(len(rho_i))])
+        rho += rho_i
+
+    rho = rho / ch
+    rho = torch.stack((rho.real, rho.imag), dim = 1)
+    rho_diff = torch.abs(rho - data)
+    metric = torch.mean(rho_diff.view(data.size()[0], -1), dim=1, keepdim=True) + 0.1 * (trace_loss + hermitian_loss) / (ch * (len(output) - 1))
+    return metric, rho_diff

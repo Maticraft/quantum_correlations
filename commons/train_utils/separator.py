@@ -1,5 +1,6 @@
 from math import factorial
-from commons.pytorch_utils import all_perms, amplitude_symmetry_dm, get_separator_loss, get_symmetry_loss
+from commons.loss.separator import separator_loss, symmetry_loss
+from commons.pytorch_utils import all_perms, amplitude_symmetry_dm
 
 
 import numpy as np
@@ -28,9 +29,9 @@ def train_separator(model, device, train_loader, optimizer, criterion, epoch_num
         losses = []
         for output_num, output in enumerate(outputs):
             if output_num == 0:
-                loss = get_separator_loss(data, output, criterion)
+                loss = separator_loss(data, output, criterion)
             else:
-                loss = get_separator_loss(data_sym, output, criterion)
+                loss = separator_loss(data_sym, output, criterion)
 
             losses.append(loss)
 
@@ -76,10 +77,10 @@ def train_siamese_separator(model, device, train_loader, optimizer, criterion, e
         data_sym = amplitude_symmetry_dm(data.cpu(), qubits_for_sym).to(device)
         output, output_sym = model(data, data_sym)
 
-        loss_std = torch.mean(get_separator_loss(data, output, criterion)[torch.squeeze(target == 0.)])
+        loss_std = torch.mean(separator_loss(data, output, criterion)[torch.squeeze(target == 0.)])
 
         if epoch_number > 2:
-            loss_sym = get_symmetry_loss(output, output_sym, qubits_for_sym)
+            loss_sym = symmetry_loss(output, output_sym, qubits_for_sym)
             total_loss = loss_std + .5*loss_sym
         else:
             total_loss = loss_std
