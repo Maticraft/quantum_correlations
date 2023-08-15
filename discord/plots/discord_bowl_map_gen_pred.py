@@ -7,8 +7,10 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 from commons.metrics import generate_parametrized_qs, global_entanglement_bipartitions
 from math import tan
 from commons.models.separators import FancySeparator
-from commons.pytorch_utils import loc_op_circ, separator_predict, all_perms, trace_predict
+from commons.pytorch_utils import loc_op_circ, all_perms, trace_predict
 import torch
+
+from commons.test.separator import separator_predict
 
 plt.rc('font', size=16) #controls default text size
 plt.rc('axes', titlesize=18) #fontsize of the title

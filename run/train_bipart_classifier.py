@@ -3,7 +3,9 @@ from commons.data.datasets import BipartitionMatricesDataset
 from commons.models.cnns import CNN
 
 from commons.models.separator_classifiers import FancySeparatorEnsembleClassifier
-from commons.models.separators import FancyClassifier
+from commons.models.separator_classifiers import FancyClassifier
+from commons.test.base import test
+from commons.train import train
 sys.path.append('./')
 
 import os
@@ -11,7 +13,7 @@ import os
 import torch
 from torch.utils.data import DataLoader
 
-from commons.pytorch_utils import train, test, save_acc
+from commons.pytorch_utils import save_acc
 
 train_dictionary_path = './datasets/3qbits/train_bisep_no_pptes_large/negativity_bipartitions.txt'
 train_root_dir = './datasets/3qbits/train_bisep_no_pptes_large/matrices/'

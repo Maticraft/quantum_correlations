@@ -246,26 +246,3 @@ class Separator(nn.Module):
         output = [out_conv(x) for out_conv in self.output_convs]
 
         return output
-
-
-class FancyClassifier(FancySeparator):
-    def __init__(self, qbits_num, sep_ch, sep_fc_num, fc_num, output_size, fc_hidden_size):
-        super(FancyClassifier, self).__init__(qbits_num, sep_ch, fc_layers=sep_fc_num)
-        self.fc_dim = 2*sep_ch*4*qbits_num
-        fc_layers = []
-        fc_layers.append(nn.Linear(self.fc_dim, fc_hidden_size))
-        fc_layers.append(nn.ReLU())
-
-        for i in range(0, fc_num - 1):
-            fc_layers.append(nn.Linear(fc_hidden_size, fc_hidden_size))
-            fc_layers.append(nn.ReLU())
-
-        self.output_fc_layers = nn.Sequential(*fc_layers)
-        self.final_layer = nn.Linear(fc_hidden_size, output_size)
-
-    def forward(self, x):
-        sep_mats = super().forward(x)
-        x_mid = torch.stack(sep_mats, dim=1)
-        x_mid = x_mid.view(-1, self.fc_dim)
-        out = self.output_fc_layers(x_mid)
-        return torch.sigmoid(self.final_layer(out))

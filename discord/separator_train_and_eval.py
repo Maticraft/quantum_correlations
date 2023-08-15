@@ -8,7 +8,11 @@ from commons.data.datasets import DensityMatricesDataset
 from commons.models.cnns import CNN
 from commons.models.separators import FancySeparator, Separator, SiameseFancySeparator
 
-from commons.pytorch_utils import train, test, save_acc, train_separator, train_siamese_separator, test_separator, test_separator_as_classifier
+from commons.pytorch_utils import save_acc
+from commons.test.base import test
+from commons.test.separator import test_separator, test_separator_as_classifier
+from commons.train.base import train
+from commons.train.separator import train_separator, train_siamese_separator
 
 
 # Common params

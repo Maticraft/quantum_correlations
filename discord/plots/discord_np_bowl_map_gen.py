@@ -6,8 +6,9 @@ import numpy as np
 import torch
 from commons.models.separators import FancySeparator
 
-from commons.pytorch_utils import trace_predict, separator_predict
+from commons.pytorch_utils import trace_predict
 from commons.metrics import generate_parametrized_np_qs, global_entanglement_bipartitions, local_randomize_matrix
+from commons.test.separator import separator_predict
 
 
 qubits_num = 3

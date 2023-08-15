@@ -4,7 +4,7 @@ import torch
 from commons.data.pure_states_generator import generate_pure_test, generate_mixed_test_def
 from commons.data.mixed_reduced_states_generator import generate_mixed_reduced_test
 from commons.models.separators import FancySeparator
-from commons.pytorch_utils import separator_predict
+from commons.test.separator import separator_predict
 
 num_qubits = 3
 data_path = f'./data/{num_qubits}qubits/'
