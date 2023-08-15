@@ -1,36 +1,6 @@
-import numpy as np
 import torch
 
-from commons.data.generation_functions import generate_parametrized_qs
-from commons.data.circuit_ops import local_randomize_matrix
-from commons.pytorch_utils import loc_op_circ
-
-
-def regularization_loss(data, output, model, device, criterion, add_noise=False, eps=0.01):
-    loc_op_data = loc_op_circ(data).double().to(device)
-    loc_op_output = model(loc_op_data)
-    reg_loss = criterion(loc_op_output, output)
-
-    if add_noise:
-        num_qubits = int(np.log2(data.shape[-1]))
-        noise_data = [construct_simple_separable_matrix(num_qubits) for _ in range(data.shape[0])]
-        noise_data = torch.stack(noise_data, dim=0)
-
-        new_data = (1-eps)*data + eps*noise_data
-        new_data = new_data.to(device)
-        new_output = model(new_data)
-        reg_loss += criterion(new_output, output)
-    
-    return reg_loss
-
-
-def construct_simple_separable_matrix(num_qubits):
-    a = np.random.uniform(size=num_qubits)
-    c = np.random.uniform(size=num_qubits)
-    random_rho = generate_parametrized_qs(num_qubits, a, c, fi2=0, fi3=0)
-    rho = local_randomize_matrix(np.arange(num_qubits), random_rho, 2)
-    t_rho = torch.from_numpy(rho.data)
-    return torch.stack([t_rho.real, t_rho.imag], dim=0)
+from commons.loss.regularization import regularization_loss
 
 
 def train_semi_supervised(teacher_model, student_model, device, train_loader, optimizer, criterion, epoch_number, interval = 100, regularizer_loss_rate = 0.5, add_noise=False):

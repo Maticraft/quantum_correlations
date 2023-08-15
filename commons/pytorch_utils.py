@@ -10,6 +10,7 @@ from qiskit import *
 from qiskit import Aer
 
 from commons.data.circuit_ops import permute_matrix, local_randomize_matrix, local_randomization, random_entanglement
+from commons.data.generation_functions import generate_parametrized_qs
 
 
 def all_perms(rhos, specified_inds = None):
@@ -238,3 +239,12 @@ def load_acc(file_path, skiprows=0):
     lines = lines[skiprows:]
     lines_sep = [[float(x) for x in line.split("  ")] for line in lines]
     return np.array(lines_sep)
+
+
+def construct_simple_separable_matrix(num_qubits):
+    a = np.random.uniform(size=num_qubits)
+    c = np.random.uniform(size=num_qubits)
+    random_rho = generate_parametrized_qs(num_qubits, a, c, fi2=0, fi3=0)
+    rho = local_randomize_matrix(np.arange(num_qubits), random_rho, 2)
+    t_rho = torch.from_numpy(rho.data)
+    return torch.stack([t_rho.real, t_rho.imag], dim=0)
