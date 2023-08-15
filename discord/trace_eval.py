@@ -6,7 +6,8 @@ from torch.utils.data import Dataset, DataLoader
 import numpy as np
 from commons.data.datasets import DensityMatricesDataset
 
-from commons.pytorch_utils import save_acc, test_trace_predictions
+from commons.pytorch_utils import save_acc
+from commons.trace import test_trace_predictions
 
 
 # Common params
