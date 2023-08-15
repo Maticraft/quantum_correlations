@@ -28,29 +28,29 @@ def save_dens_matrix_with_labels(num_qubits, filename, ro, method, entangled_qbi
     extra_info = _get_extra_info(ro, trace_reconstruction, discord)
     neg_glob, neg_bipart, disc_glob, disc_bipart = _get_neg_and_disc(ro, ppt, not_ent_qbits)
     
-    bipart_metrics, bipart_dict_paths = _get_bipart_metrics(ro, discord, data_dir, neg_bipart, disc_bipart, separate_bipart)
+    bipart_metrics, bipart_dict_paths = _get_bipart_metrics(ro, discord, data_dir, neg_bipart, disc_bipart, separate_bipart, ppt, not_ent_qbits)
 
     if zero_neg == 'incl':
-        _save_data(file_path, ro, filename, dictionary_path, method, entangled_qbits, all_bipart_metrics=bipart_metrics, bipart_dict_paths=bipart_dict_paths, extra_info=extra_info)
+        _save_data(file_path, ro, filename, dictionary_path, method, entangled_qbits, all_bipart_metrics=bipart_metrics, bipart_dict_paths=bipart_dict_paths, extra_info=extra_info, ppt=ppt)
 
     elif zero_neg == 'only':
         if neg_glob < CONFIDENCE_THRESHOLD:
-            _save_data(file_path, ro, filename, dictionary_path, method, entangled_qbits, all_bipart_metrics=bipart_metrics, bipart_dict_paths=bipart_dict_paths, extra_info=extra_info)
+            _save_data(file_path, ro, filename, dictionary_path, method, entangled_qbits, all_bipart_metrics=bipart_metrics, bipart_dict_paths=bipart_dict_paths, extra_info=extra_info, ppt=ppt)
 
     elif zero_neg == 'none':
         l = combinations_num(len(not_ent_qbits))
         if neg_glob >= CONFIDENCE_THRESHOLD and np.count_nonzero(np.array(neg_bipart) <= CONFIDENCE_THRESHOLD) <= l:
-            _save_data(file_path, ro, filename, dictionary_path, method, entangled_qbits, all_bipart_metrics=bipart_metrics, bipart_dict_paths=bipart_dict_paths, extra_info=extra_info)
+            _save_data(file_path, ro, filename, dictionary_path, method, entangled_qbits, all_bipart_metrics=bipart_metrics, bipart_dict_paths=bipart_dict_paths, extra_info=extra_info, ppt=ppt)
     
     elif zero_neg == 'zero_discord':
         if (disc_glob <= CONFIDENCE_THRESHOLD) or (neg_glob >= CONFIDENCE_THRESHOLD):
             if np.count_nonzero(np.array(neg_bipart) <= CONFIDENCE_THRESHOLD) == np.count_nonzero(np.array(disc_bipart) <= CONFIDENCE_THRESHOLD):
-                _save_data(file_path, ro, filename, dictionary_path, method, entangled_qbits, all_bipart_metrics=bipart_metrics, bipart_dict_paths=bipart_dict_paths, extra_info=extra_info)
+                _save_data(file_path, ro, filename, dictionary_path, method, entangled_qbits, all_bipart_metrics=bipart_metrics, bipart_dict_paths=bipart_dict_paths, extra_info=extra_info, ppt=ppt)
     
     elif zero_neg == 'zero_discord_only':
         if (disc_glob <= CONFIDENCE_THRESHOLD) or (separate_bipart and (neg_glob >= CONFIDENCE_THRESHOLD)):
             if np.count_nonzero(np.array(neg_bipart) <= CONFIDENCE_THRESHOLD) == np.count_nonzero(np.array(disc_bipart) <= CONFIDENCE_THRESHOLD):
-                _save_data(file_path, ro, filename, dictionary_path, method, entangled_qbits, all_bipart_metrics=bipart_metrics, bipart_dict_paths=bipart_dict_paths, extra_info=extra_info)
+                _save_data(file_path, ro, filename, dictionary_path, method, entangled_qbits, all_bipart_metrics=bipart_metrics, bipart_dict_paths=bipart_dict_paths, extra_info=extra_info, ppt=ppt)
     else:
         raise ValueError('Wrong value for zero_neg parameter: {}'.format(zero_neg))
 
@@ -78,13 +78,13 @@ def _get_neg_and_disc(ro, ppt, not_ent_qbits):
     return neg_glob, neg_bipart, disc_glob, disc_bipart
 
 
-def _get_bipart_metrics(ro, discord, data_dir, neg_bipart, disc_bipart, separate_bipart):
+def _get_bipart_metrics(ro, discord, data_dir, neg_bipart, disc_bipart, separate_bipart, ppt, not_ent_qbits):
     if not separate_bipart:
         return [], []
     neg_dict_path = data_dir / NEGATIVITY_BIPART_DICT_NAME
     disc_dict_path = data_dir / DISCORD_BIPART_DICT_NAME
     num_sep_dict_pah = data_dir / NUMERICAL_SEPARABILITY_BIPART_DICT_NAME
-    numerical_separability_bipart = global_entanglement_bipartitions(ro, "numerical_separability", return_separate_outputs=True)
+    _, numerical_separability_bipart = global_entanglement_bipartitions(ro, "numerical_separability", ppt, return_separate_outputs=True, not_ent_qbits=not_ent_qbits)
 
     bipart_metrics = [neg_bipart, numerical_separability_bipart]
     bipart_dict_paths = [neg_dict_path, num_sep_dict_pah]
@@ -95,11 +95,11 @@ def _get_bipart_metrics(ro, discord, data_dir, neg_bipart, disc_bipart, separate
     return bipart_metrics, bipart_dict_paths
 
 
-def _save_data(file_path, ro, filename, dictionary_path, method, entangled_qbits, all_bipart_metrics=[], bipart_dict_paths=[], extra_info=""):
+def _save_data(file_path, ro, filename, dictionary_path, method, entangled_qbits, all_bipart_metrics=[], bipart_dict_paths=[], extra_info="", ppt=False):
     np.save(file_path, ro.data)
     for bipart_metrics, bipart_dict_path in zip(all_bipart_metrics, bipart_dict_paths):
         _save_bipart_metrics(bipart_metrics, filename, bipart_dict_path)
-    _save_common_metrics(dictionary_path, filename, method, entangled_qbits, ro, extra_info)
+    _save_common_metrics(dictionary_path, filename, method, entangled_qbits, ro, extra_info, ppt)
 
 
 def _save_bipart_metrics(bipart_metrics, filename, dict_path):
@@ -108,9 +108,9 @@ def _save_bipart_metrics(bipart_metrics, filename, dict_path):
         dic.write(filename + ", " + bipart_metrics + "\n")
 
 
-def _save_common_metrics(dictionary_path, filename, method, entangled_qbits, ro, extra_info=""):
+def _save_common_metrics(dictionary_path, filename, method, entangled_qbits, ro, extra_info="", ppt=False):
     with open(dictionary_path, "a") as dic:
         dic.write(filename + ", " + method + ", " + str(entangled_qbits) + ", " + str(global_entanglement(ro)) + 
         ", " + str(global_entanglement_bipartitions(ro, "von_Neumann")) + ", " + str(global_entanglement_bipartitions(ro, "concurrence")) +
-        ", " + str(global_entanglement_bipartitions(ro, "negativity")) + ", " + str(global_entanglement_bipartitions(ro, 'realignment')) + 
-        ", " + str(global_entanglement_bipartitions(ro, 'numerical_separability')) + extra_info + "\n")
+        ", " + str(global_entanglement_bipartitions(ro, "negativity", ppt)) + ", " + str(global_entanglement_bipartitions(ro, 'realignment')) + 
+        ", " + str(global_entanglement_bipartitions(ro, 'numerical_separability', ppt)) + extra_info + "\n")

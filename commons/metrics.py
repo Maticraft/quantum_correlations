@@ -4,10 +4,10 @@ from math import log2, floor
 from itertools import combinations
 from functools import reduce
 from toqito.state_props.is_separable import is_separable
-# from toqito.state_props.is_ppt import is_ppt
+from toqito.state_props.is_ppt import is_ppt
 from qiskit.quantum_info import entanglement_of_formation, partial_trace, DensityMatrix, entropy, state_fidelity
 
-from commons.data.circuit_ops import extend_matrix, permute_matrix
+from commons.data.circuit_ops import expand_matrix, permute_matrix
 
 
 # Measure of entanglement of each qubit of the system with the remaining (N −1)-qubits
@@ -289,13 +289,23 @@ def _negativity_bipart(dens_matrix, ppt, not_ent_qbits, qubits, comb):
     s1 = negativity_dense(dens_matrix, qargs = list(comb))
     s2 = negativity_dense(dens_matrix, qargs = no_comb)
 
-    is_entangled = [q for q in list(comb) if q not in not_ent_qbits] and [q for q in no_comb if q not in not_ent_qbits]
+    is_entangled = _is_comb_entangled(comb, not_ent_qbits) and _is_comb_entangled(no_comb, not_ent_qbits)
 
     s1 = 1. if ppt and (s1 < 0.001) and is_entangled else s1
     s2 = 1. if ppt and (s2 < 0.001) and is_entangled else s2
 
     neg = (s1 + s2) / 2
     return neg
+
+
+def _is_comb_entangled(comb, not_ent_qbits):
+    not_ent_qbits_sets = [set([q]) if np.issubdtype(type(q), int) else set(q) for q in not_ent_qbits]
+    comb_set = set(comb)
+    total_set = set()
+    for s in not_ent_qbits_sets:
+        if s.intersection(comb_set) == s:
+            total_set.update(s)
+    return not total_set == comb_set
 
 
 def _concurrence_bipart(dens_matrix, qubits, comb):
@@ -340,7 +350,7 @@ def global_entanglement_bipartitions(dens_matrix, measure = "von_Neumann", ppt =
         "realignment": _realignment_bipart,
         "discord": _zero_discord_bipart,
         "trace_reconstruction": lambda rho, qbits, combination: bures_dist_for_trace_rec(rho),
-        "numerical_separability": toqito_bipartite_separability
+        "numerical_separability": lambda rho, qbits, combination: numerical_separability(rho, qbits, combination, ppt, not_ent_qbits)
     }
 
     N = int(log2(dens_matrix.dim))
@@ -409,7 +419,10 @@ def combinations_num(qubits_num):
     return l
 
 # manual extension for toqito symmetric measure for separability
-def toqito_bipartite_separability(dens_matrix, qubits, comb):
+def numerical_separability(dens_matrix, qubits, comb, is_pptes=False, not_ent_qubits = []):
+    neg = _negativity_bipart(dens_matrix, ppt=False, not_ent_qbits=not_ent_qubits,  qubits=qubits, comb=comb)
+    if not is_pptes or neg > 0:
+        return neg
     num_qubits = len(qubits)
     num_qubits_in_comb = len(comb)
     assert num_qubits_in_comb <= num_qubits/2, "Number of qubits in bipartition must be less or equal to half of the number of qubits in the system"
@@ -417,7 +430,7 @@ def toqito_bipartite_separability(dens_matrix, qubits, comb):
     permutation = [q for q in qubits if q not in list(comb)] + list(comb)
     permuted_matrix = permute_matrix(permutation, dens_matrix)
     if num_additional_qubits > 0:
-        permuted_matrix = extend_matrix(permuted_matrix, num_additional_qubits)
+        permuted_matrix = expand_matrix(permuted_matrix, num_additional_qubits)
     
     rho = permuted_matrix.data
     if is_separable(rho):

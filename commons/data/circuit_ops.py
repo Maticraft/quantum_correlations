@@ -144,9 +144,9 @@ def rotate_matrix(qbits, matrix, theta, phi, lam):
     return matrix.evolve(qc, qbits)
 
 
-def extend_matrix(matrix, num_qubits):
+def expand_matrix(matrix, num_qubits):
     simple_state = Statevector(np.array([1, 0])) # state |0>
     simple_state_matrix = DensityMatrix(simple_state)
     extension_matrix = reduce(np.kron, [simple_state_matrix.data for i in range(num_qubits)])
     extension_matrix = DensityMatrix(extension_matrix)
-    return matrix.tensor(extension_matrix)
+    return matrix.expand(extension_matrix)
