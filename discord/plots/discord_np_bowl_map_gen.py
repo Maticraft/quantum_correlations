@@ -8,7 +8,7 @@ from commons.models.separators import FancySeparator
 
 from commons.trace import trace_predict
 from commons.metrics import generate_parametrized_np_qs, global_entanglement_bipartitions, local_randomize_matrix
-from commons.test.separator import separator_predict
+from commons.test_utils.separator import separator_predict
 
 
 qubits_num = 3

@@ -9,10 +9,10 @@ from commons.models.cnns import CNN
 from commons.models.separators import FancySeparator, Separator, SiameseFancySeparator
 
 from commons.pytorch_utils import save_acc
-from commons.test.base import test
-from commons.test.separator import test_separator, test_separator_as_classifier
-from commons.train.base import train
-from commons.train.separator import train_separator, train_siamese_separator
+from commons.test_utils.base import test
+from commons.test_utils.separator import test_separator, test_separator_as_classifier
+from commons.train_utils.base import train
+from commons.train_utils.separator import train_separator, train_siamese_separator
 
 
 # Common params

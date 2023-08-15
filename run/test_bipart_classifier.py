@@ -4,8 +4,8 @@ from commons.models.cnns import CNN
 
 from commons.models.separator_classifiers import FancySeparatorEnsembleClassifier
 from commons.models.separator_classifiers import FancyClassifier
-from commons.test.base import test
-from commons.train import train
+from commons.test_utils.base import test
+from commons.train_utils import train
 sys.path.append('./')
 
 import os

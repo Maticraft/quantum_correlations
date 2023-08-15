@@ -12,7 +12,7 @@ from commons.pytorch_utils import loc_op_circ, loc_op, all_perms
 
 from tqdm import tqdm
 import torch
-from commons.test.separator import separator_predict
+from commons.test_utils.separator import separator_predict
 
 model_type = 'Separator'
 map_mode = 'loss'

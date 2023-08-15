@@ -10,7 +10,7 @@ from commons.models.separators import FancySeparator
 from commons.pytorch_utils import loc_op_circ, all_perms
 import torch
 
-from commons.test.separator import separator_predict
+from commons.test_utils.separator import separator_predict
 from commons.trace import trace_predict
 
 plt.rc('font', size=16) #controls default text size

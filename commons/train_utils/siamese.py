@@ -8,7 +8,7 @@ import torch
 
 from math import factorial, log2
 
-from commons.train.purificator import train_purificator
+from commons.train_utils.purificator import train_purificator
 
 
 def train_vector_siamese(model, device, train_loader, optimizer, criterion, epoch_number, interval, loc_op_flag = False, reduced_perms_num = None, pure_representation = False, biparts = 'separate'):

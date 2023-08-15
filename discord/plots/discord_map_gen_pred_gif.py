@@ -9,7 +9,7 @@ from commons.models.separators import FancySeparator
 from commons.pytorch_utils import loc_op_circ, loc_op, all_perms
 
 import torch
-from commons.test.separator import separator_predict
+from commons.test_utils.separator import separator_predict
 
 # Gif params
 gif_pngs = 100
