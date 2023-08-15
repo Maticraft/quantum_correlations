@@ -8,26 +8,27 @@ def generate_with_assertion(batch_size=None):
         @wraps(generation_function)
         def _wrapper(self, *args, batch_size=batch_size, **kwargs):
             try:
+                save_data_dir = args[2]
+            except:
+                save_data_dir = kwargs['save_data_dir']
+            if save_data_dir == None or kwargs.get('return_matrices', False):
+                return generation_function(self, *args, **kwargs)
+            
+            try:
                 qubits_num = args[0]
             except:
                 qubits_num = kwargs['qubits_num']
             try:
                 desired_examples = args[1]
-                if batch_size != None:
+                if batch_size is not None and desired_examples > batch_size:
                     args[1] = batch_size
             except:
                 desired_examples = kwargs['examples']
-                if batch_size != None:
+                if batch_size is not None and desired_examples > batch_size:
                     kwargs['examples'] = batch_size
-            try:
-                save_data_dir = args[2]
-            except:
-                save_data_dir = kwargs['save_data_dir']
 
-            batch_size = batch_size if batch_size is not None else desired_examples
-
-            if save_data_dir == None or kwargs.get('return_matrices', False):
-                return generation_function(self, *args, **kwargs)
+            if batch_size is None or desired_examples < batch_size:
+                batch_size = desired_examples
 
             filepath = f"./{DATASETS_DIR_NAME}/{qubits_num}qbits/{save_data_dir}/"
             if not os.path.isdir(filepath):

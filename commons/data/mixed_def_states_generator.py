@@ -28,7 +28,7 @@ class MixedDefStatesGenerator():
         self.with_permutations = with_permutations
 
 
-    @generate_with_assertion()
+    @generate_with_assertion(1000)
     def generate_matrices(self, qubits_num, examples, save_data_dir = None, specified_method = None, start_index = 0, encoded = True, label_potent_ppt = False, with_permutations = False):
         self._initialize_generator(examples, qubits_num, with_permutations)
         d = 2**self.num_qubits
@@ -49,7 +49,7 @@ class MixedDefStatesGenerator():
                 ppt_flag = False
 
             if self.with_permutations:
-                ro = self._permute_matrix(ro)
+                ro, _ = self._permute_matrix(ro)
 
             if save_data_dir:
                 save_dens_matrix_with_labels(self.num_qubits, f"dens{start_index + i}", ro, f"mixed from pure {m}", "unknown", save_data_dir, ppt = ppt_flag, separate_bipart= encoded)
@@ -85,11 +85,22 @@ class MixedDefStatesGenerator():
         qubits_perm = list(permutations(list(np.arange(self.num_qubits))))
         rand_perm = qubits_perm[np.random.randint(len(qubits_perm))]
         ro = permute_matrix(rand_perm, ro)
-        return ro
+        return ro, rand_perm
+
+
+    def _permute_qubit_ids(self, qubits_ids, permutation):
+        permuted_qubit_ids = []
+        for q in qubits_ids:
+            if type(q) == int:
+                new_q = permutation.index(q)
+            else:
+                new_q = tuple([permutation.index(qb) for qb in q])
+            permuted_qubit_ids.append(new_q)
+        return permuted_qubit_ids
 
 
     # More effective multi matrices generating method, which bases on some number of pregenerated pure states
-    @generate_with_assertion()
+    @generate_with_assertion(1000)
     def generate_multi_mixed_matrices(self, qubits_num, examples, num_pure_states, save_data_dir = None, specified_method = None, base_size = None, start_index = 0, encoded = True, label_potent_ppt = False, zero_neg = 'incl', fully_entangled = False, max_num_ps = None, discord = False, mixing_mode = 'outer', with_permutations = False):
         self._initialize_generator(examples, qubits_num, with_permutations)
         if base_size is None:
@@ -112,7 +123,8 @@ class MixedDefStatesGenerator():
             ro = DensityMatrix(mixed_dms[i])
             
             if self.with_permutations:
-                ro = self._permute_matrix(ro)
+                ro, permutation = self._permute_matrix(ro)
+                not_ent_qbits = self._permute_qubit_ids(not_ent_qbits, permutation)
 
             if save_data_dir:
                 if specified_method == 'simple_non_product_zero_discord' or specified_method == 'random_non_product_zero_discord':
@@ -140,19 +152,21 @@ class MixedDefStatesGenerator():
         
         elif specified_method == 'kron_sep_circ':
             not_ent_qbits += list(np.arange(self.num_qubits))
-            dms = self._generate_single_qubit_circuit_pure_states(base_size) #
+            dms = self._generate_single_qubit_circuit_pure_states(base_size)
         
         elif specified_method == 'kron_sep_haar':
             not_ent_qbits += list(np.arange(self.num_qubits))
-            dms = self._generate_single_qubit_haar_pure_states(base_size, not_ent_qbits) #
+            dms = self._generate_single_qubit_haar_pure_states(base_size)
 
         elif specified_method == 'biseparable': 
-            not_ent_qbits.append(0)
-            dms, dms2 = self._generate_circuit_pure_states_pairs(base_size, fully_entangled, not_ent_qbits) #
+            dms, dms2 = self._generate_circuit_pure_states_pairs(base_size, fully_entangled)
+            dms_qubits = int(np.log2(dms.shape[-1]))
+            not_ent_qbits.append(tuple([self.num_qubits - i for i in range(1, dms_qubits + 1)]))
 
         elif specified_method == 'biseparable_haar':
-            not_ent_qbits.append(0)
-            dms, dms2 = self._generate_haar_pure_states_pairs(base_size, not_ent_qbits) # 
+            dms, dms2 = self._generate_haar_pure_states_pairs(base_size)
+            dms_qubits = int(np.log2(dms.shape[-1]))
+            not_ent_qbits.append(tuple([self.num_qubits - i for i in range(1, dms_qubits + 1)]))
 
         elif specified_method == 'simple_non_product_zero_discord':
             not_ent_qbits += list(np.arange(self.num_qubits))
@@ -169,7 +183,7 @@ class MixedDefStatesGenerator():
 
     def _generate_mixed_density_matrices_from_random_states(self, specified_method, max_num_ps, mixing_mode, dms, dms2):
         if max_num_ps == None:
-            max_num_ps = 2*(2**self.num_qubit)
+            max_num_ps = 2*(2**self.num_qubits)
         mixed_dms = []
         npss = []
         indices = np.arange(len(dms))
@@ -203,7 +217,7 @@ class MixedDefStatesGenerator():
         return mixed_dms, npss
 
 
-    def _generate_mixed_density_matrices_from_constant_states(self, num_pure_states, specified_method, mixing_mode, dms, dms2, indices):
+    def _generate_mixed_density_matrices_from_constant_states(self, num_pure_states, specified_method, mixing_mode, dms, dms2):
         nps = num_pure_states
         probs = np.random.uniform(size=(self.num_examples, nps))
         probs /= np.sum(probs, axis= 1, keepdims=True)
@@ -310,7 +324,7 @@ class MixedDefStatesGenerator():
             basis_states2 = np.random.choice(indices, size = (nps, nps2))
 
             for j in range(nps):
-                dm_j1 = probs2[0]*1[basis_states2[j, 0]]
+                dm_j1 = probs2[0]*dms[basis_states2[j, 0]]
                 dm_j2 = probs2[0]*dms2[basis_states2[j, 0]]
 
                 for l in range(1, nps2):
@@ -341,10 +355,10 @@ class MixedDefStatesGenerator():
 
     def _generate_mixed_kron_sep_states(self, num_pure_states, mixing_mode, dms, probs, indices):
         nps = num_pure_states
-        if nps > 1:
-            probs = np.squeeze(probs)
-        else:
-            probs = np.squeeze(probs, axis=(2, 3))
+        # if nps > 1:
+        #     probs = np.squeeze(probs)
+        # else:
+        #     probs = np.squeeze(probs, axis=(2, 3))
         mixed_dms = []
         for i in range(self.num_examples):
             dm = self._generate_single_mixed_kron_separable_state(mixing_mode, dms, probs[i], nps, indices)
@@ -356,10 +370,10 @@ class MixedDefStatesGenerator():
 
     def _generate_mixed_biseparable_states(self, num_pure_states, mixing_mode, dms, dms2, probs, indices):
         nps = num_pure_states
-        if nps > 1:
-            probs = np.squeeze(probs)
-        else:
-            probs = np.squeeze(probs, axis=(2, 3))
+        # if nps > 1:
+        #     probs = np.squeeze(probs)
+        # else:
+        #     probs = np.squeeze(probs, axis=(2, 3))
         mixed_dms = []
         for i in range(self.num_examples):
             dm = self._generate_single_mixed_biseparable_state(mixing_mode, dms, dms2, probs[i], nps, indices)

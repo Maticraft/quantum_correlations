@@ -164,7 +164,7 @@ def generate_parametrized(qbits, encoded, indx = 0, save_data_dir = 'parametrize
     
                 
 # ENTANGLEMENT TRAIN SET 1/2 (SAME FOR ALL 3 DATASETS) - always verified in case of
-def generate_pure_train_balanced(qubits, encoded, indx = 0, save_data_dir = 'train_balanced', examples_ratio = 1., max_num_ps = None, discord = False, biseparable = False, zero_neg = 'none'):
+def generate_pure_train_balanced(qubits, encoded, indx = 0, save_data_dir = 'train_balanced', examples_ratio = 1., max_num_ps = None, discord = False, biseparable = False, zero_neg = 'none', label_potent_ppt = False):
     args = {
         'qubits_num': qubits,
         'encoded': encoded,
@@ -183,10 +183,10 @@ def generate_pure_train_balanced(qubits, encoded, indx = 0, save_data_dir = 'tra
     args['max_num_ps'] = max_num_ps
     generator = MixedDefStatesGenerator()
     args['start_index'] = generator.generate_multi_mixed_matrices(**args, examples=int(examples_ratio*20000), num_pure_states=1, specified_method='kron_sep_haar')
-    args['start_index'] = generator.generate_multi_mixed_matrices(**args, examples=int(examples_ratio*40000), num_pure_states="random", specified_method=[0, 3], base_size=10000, zero_neg=zero_neg)
+    args['start_index'] = generator.generate_multi_mixed_matrices(**args, examples=int(examples_ratio*40000), num_pure_states="random", specified_method=[0, 3], base_size=10000, zero_neg=zero_neg, label_potent_ppt=label_potent_ppt)
     args['start_index'] = generator.generate_multi_mixed_matrices(**args, examples=int(examples_ratio*20000), num_pure_states="random", specified_method=0, base_size=10000)
-    args['start_index'] = generator.generate_multi_mixed_matrices(**args, examples=int(examples_ratio*30000), num_pure_states="random", specified_method=3, base_size=10000, zero_neg=zero_neg)
-    args['start_index'] = generator.generate_multi_mixed_matrices(**args, examples=int(examples_ratio*30000), num_pure_states="random", specified_method=4, base_size=10000, zero_neg=zero_neg)
+    args['start_index'] = generator.generate_multi_mixed_matrices(**args, examples=int(examples_ratio*30000), num_pure_states="random", specified_method=3, base_size=10000, zero_neg=zero_neg, label_potent_ppt=label_potent_ppt)
+    args['start_index'] = generator.generate_multi_mixed_matrices(**args, examples=int(examples_ratio*30000), num_pure_states="random", specified_method=4, base_size=10000, zero_neg=zero_neg, label_potent_ppt=label_potent_ppt)
     args['start_index'] = generator.generate_multi_mixed_matrices(**args, examples=int(examples_ratio*20000), num_pure_states='random', specified_method= 'kron_sep_circ', mixing_mode='outer')
     args['start_index'] = generator.generate_multi_mixed_matrices(**args, examples=int(examples_ratio*20000), num_pure_states= 'random', specified_method= 'kron_sep_circ', mixing_mode='inner')
     args['start_index'] = generator.generate_multi_mixed_matrices(**args, examples=int(examples_ratio*20000), num_pure_states='random', specified_method= 'kron_sep_circ', mixing_mode='comb')
@@ -203,16 +203,18 @@ def generate_pure_train_balanced(qubits, encoded, indx = 0, save_data_dir = 'tra
             'examples_ratio': examples_ratio,
             'max_num_ps': max_num_ps,
             'examples': 20000,
-            'discord': discord
+            'discord': discord,
+            'label_potent_ppt': label_potent_ppt,
+            'zero_neg': zero_neg,
         }
-        bisep_args['indx'] = generate_mixed_biseparable(**bisep_args, zero_neg=zero_neg)
-        bisep_args['indx'] = generate_mixed_biseparable(**bisep_args, mixing_mode='inner', zero_neg=zero_neg)
-        bisep_args['indx'] = generate_mixed_biseparable(**bisep_args, mixing_mode='comb', zero_neg=zero_neg)
+        bisep_args['indx'] = generate_mixed_biseparable(**bisep_args)
+        bisep_args['indx'] = generate_mixed_biseparable(**bisep_args, mixing_mode='inner')
+        bisep_args['indx'] = generate_mixed_biseparable(**bisep_args, mixing_mode='comb')
 
         bisep_args['indx'] = generate_mixed_biseparable_haar(**bisep_args, nps = 1)
         bisep_args['indx'] = generate_mixed_biseparable_haar(**bisep_args)
-        bisep_args['indx'] = generate_mixed_biseparable_haar(**bisep_args, mixing_mode = 'inner', zero_neg=zero_neg)
-        bisep_args['indx'] = generate_mixed_biseparable_haar(**bisep_args, mixing_mode = 'comb', zero_neg=zero_neg)
+        bisep_args['indx'] = generate_mixed_biseparable_haar(**bisep_args, mixing_mode = 'inner')
+        bisep_args['indx'] = generate_mixed_biseparable_haar(**bisep_args, mixing_mode = 'comb')
         args['start_index'] = bisep_args['indx']
     return args['start_index']
 
@@ -280,10 +282,10 @@ def generate_train_mixed_def_product(qubits, encoded, indx = 0, save_data_dir = 
     return args['start_index']
 
 
-def generate_mixed_biseparable(qubits, encoded, indx = 0, save_data_dir = 'biseparable', examples_ratio = 1., nps = 'random', max_num_ps = None, examples = 20000, with_permutations=True, discord = False, mixing_mode = 'outer', zero_neg = 'none'):
+def generate_mixed_biseparable(qubits_num, encoded, indx = 0, save_data_dir = 'biseparable', examples_ratio = 1., nps = 'random', max_num_ps = None, examples = 20000, with_permutations=True, discord = False, mixing_mode = 'outer', zero_neg = 'none', label_potent_ppt = False):
     generator = MixedDefStatesGenerator()
     return generator.generate_multi_mixed_matrices(
-        qubits_num=qubits,
+        qubits_num=qubits_num,
         examples = int(examples_ratio*examples),
         save_data_dir=save_data_dir,
         num_pure_states=nps,
@@ -295,14 +297,15 @@ def generate_mixed_biseparable(qubits, encoded, indx = 0, save_data_dir = 'bisep
         fully_entangled=True,
         discord=discord,
         mixing_mode=mixing_mode,
-        with_permutations=with_permutations
+        with_permutations=with_permutations,
+        label_potent_ppt=label_potent_ppt
     )
 
 
-def generate_mixed_biseparable_haar(qubits, encoded, indx = 0, save_data_dir = 'biseparable_haar', examples_ratio = 1., nps = 'random', max_num_ps = None, examples = 20000, with_permutations=True, discord = False, mixing_mode = 'outer', zero_neg='none'):
+def generate_mixed_biseparable_haar(qubits_num, encoded, indx = 0, save_data_dir = 'biseparable_haar', examples_ratio = 1., nps = 'random', max_num_ps = None, examples = 20000, with_permutations=True, discord = False, mixing_mode = 'outer', zero_neg='none', label_potent_ppt=False):
     generator = MixedDefStatesGenerator()
     return generator.generate_multi_mixed_matrices(
-        qubits_num=qubits,
+        qubits_num=qubits_num,
         examples = int(examples_ratio*examples),
         save_data_dir=save_data_dir,
         num_pure_states=nps,
@@ -313,8 +316,34 @@ def generate_mixed_biseparable_haar(qubits, encoded, indx = 0, save_data_dir = '
         zero_neg=zero_neg,
         discord=discord,
         mixing_mode=mixing_mode,
-        with_permutations=with_permutations
+        with_permutations=with_permutations,
+        label_potent_ppt=label_potent_ppt
     )
+
+
+# For test use examples_ratio = 0.1
+def generate_biseparable_test(qubits_num, encoded, indx = 0, save_data_dir = 'biseparable_test', examples_ratio = 1., max_num_ps = None, discord = False, zero_neg='none', label_potent_ppt=False):
+    bisep_args = {
+        'qubits_num': qubits_num,
+        'encoded': encoded,
+        'indx': indx,
+        'save_data_dir': save_data_dir,
+        'examples_ratio': examples_ratio,
+        'max_num_ps': max_num_ps,
+        'examples': 20000,
+        'discord': discord,
+        'label_potent_ppt': label_potent_ppt,
+        'zero_neg': zero_neg,
+    }
+    bisep_args['indx'] = generate_mixed_biseparable(**bisep_args)
+    bisep_args['indx'] = generate_mixed_biseparable(**bisep_args, mixing_mode='inner')
+    bisep_args['indx'] = generate_mixed_biseparable(**bisep_args, mixing_mode='comb')
+
+    bisep_args['indx'] = generate_mixed_biseparable_haar(**bisep_args, nps = 1)
+    bisep_args['indx'] = generate_mixed_biseparable_haar(**bisep_args)
+    bisep_args['indx'] = generate_mixed_biseparable_haar(**bisep_args, mixing_mode = 'inner')
+    bisep_args['indx'] = generate_mixed_biseparable_haar(**bisep_args, mixing_mode = 'comb')
+    return bisep_args['indx']
 
 
 # ENTANGLEMENT PAPER PURE TEST SET
@@ -508,7 +537,9 @@ def generate_mixed_reduced_train_balanced(qubits, encoded, indx = 0, ppt = True,
     args['start_index'] = generator.generate_circuit_matrices(**args, examples=int(examples_ratio*40000), specified_method=ReducedMethods.RandomEntanglement, label_potent_ppt=ppt, zero_neg=zero_neg)
     args['start_index'] = generator.generate_circuit_matrices(**args, examples=int(examples_ratio*5000), specified_method=ReducedMethods.Wstate)
     args['start_index'] = generator.generate_circuit_matrices(**args, examples=int(examples_ratio*5000), specified_method=ReducedMethods.GHZstate)
-    args['start_index'] = generator.generate_random_haar_matrices(**args, examples=int(examples_ratio*10000))
+    args2 = args.copy()
+    args2['pure_state_qubits'] = 6
+    args['start_index'] = generator.generate_random_haar_matrices(**args2, examples=int(examples_ratio*10000), label_potent_ppt=ppt)
     args['start_index'] = generator.generate_circuit_matrices(**args, examples=int(examples_ratio*20000), specified_method=ReducedMethods.Separable)
     return args['start_index']
 
@@ -599,8 +630,8 @@ def generate_mixed_test_3class(qubits, encoded, indx = 0, qubits_glob = 9, save_
 
 # ENTANGLEMENT PAPER TRAIN SETS (WEAKLY LABELED - label_ppt = True, zero_neg = 'incl', NEGATIVITY LABELED - label_ppt = False, zero_neg = 'incl', NO PPTES - label_ppt = False, zero_neg = 'none')
 # FOR VALIDATION THE SAME AS FOR NOPPTES with examples_ratio = 0.1
-def generate_train_balanced(qbits, encoded, indx = 0, label_ppt = True, save_data_dir = 'train_balanced', examples_ratio = 1., max_num_ps = None, zero_neg = 'incl', qubits_glob = 9):
-    new_indx = generate_pure_train_balanced(qbits, encoded, indx, save_data_dir, examples_ratio, max_num_ps)
+def generate_train_balanced(qbits, encoded, indx = 0, label_ppt = True, save_data_dir = 'train_balanced', examples_ratio = 1., max_num_ps = None, zero_neg = 'incl', qubits_glob = 9, biseparable = False):
+    new_indx = generate_pure_train_balanced(qbits, encoded, indx, save_data_dir, examples_ratio, max_num_ps, biseparable=biseparable, zero_neg=zero_neg, label_potent_ppt=label_ppt)
     new_indx = generate_mixed_reduced_train_balanced(qbits, encoded, new_indx, ppt = label_ppt, save_data_dir = save_data_dir, examples_ratio = examples_ratio, zero_neg= zero_neg, qubits_glob=qubits_glob)
     return new_indx
 

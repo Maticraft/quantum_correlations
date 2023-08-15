@@ -125,7 +125,7 @@ class MixedReducedStatesGenerator():
 
 
     @generate_with_assertion(batch_size=100)
-    def generate_circuit_matrices(self, examples, qubits_num, pure_state_qubits, save_data_dir = None, random_gates = 2, specified_method = None, start_index = 0, global_entanglement = False, encoded = True, label_potent_ppt = False, zero_neg = 'incl', discord = False, fully_entangled = False, with_permutations = False):
+    def generate_circuit_matrices(self, examples, qubits_num, pure_state_qubits, save_data_dir = None, random_gates = 2, specified_method = None, start_index = 0, encoded = True, label_potent_ppt = False, zero_neg = 'incl', discord = False, fully_entangled = False, with_permutations = False):
         # possible methods:
         # 0: W state
         # 1: GHZ state
@@ -155,14 +155,15 @@ class MixedReducedStatesGenerator():
             additional_info.update(global_info)
 
             if self.with_permutations:
-                reduced_ro = self._permute_matrix(reduced_ro)
+                reduced_ro, permutation = self._permute_matrix(reduced_ro)
+                additional_info['not_ent_qbits'] = self._permute_qubit_ids(additional_info['not_ent_qbits'], permutation)
 
             save_dens_matrix_with_labels(self.num_qubits, f"dens{start_index + i}", reduced_ro, **additional_info)
 
 
     def _calculate_reduced_matrix(self, specified_method, label_potent_ppt, fully_entangled, params, dens_matrices, i):
         if specified_method in [ReducedMethods.Wstate, ReducedMethods.GHZstate, ReducedMethods.RandomEntanglement]:
-            self._calculate_reduced_matrix_for_simple_states(label_potent_ppt, fully_entangled, params, dens_matrices, i)
+            reduced_ro, info = self._calculate_reduced_matrix_for_simple_states(label_potent_ppt, fully_entangled, params, dens_matrices, i)
             
         elif specified_method == ReducedMethods.Separable:
             reduced_ro, info = self._calculate_reduced_matrix_for_separable_states(params, dens_matrices)
@@ -255,6 +256,7 @@ class MixedReducedStatesGenerator():
 
         qbits_for_trace = [q for q in range(self.pure_qubits) if q not in ent_q]
         reduced_ro = partial_trace(ro, qbits_for_trace)
+        reduced_ro_qubits = reduced_ro.data.shape[-1]
 
         rand_ind = random.randint(0, len(dens_matrices) - 1)
         m, entangled_qbits = params[rand_ind]
@@ -264,13 +266,12 @@ class MixedReducedStatesGenerator():
 
         ent_q = random.sample(entangled_qbits, self.num_qubits - k)
         qbits_for_trace = [q for q in range(self.pure_qubits) if q not in ent_q]
-
         reduced_ro = reduced_ro.tensor(partial_trace(ro, qbits_for_trace))
 
         ent_qbits_str = 'bisep'
 
         pptes_flag = False
-        not_entangled_qbits_inds = [0]
+        not_entangled_qbits_inds = [tuple([self.num_qubits - i for i in range(1, reduced_ro_qubits + 1)])]
         return reduced_ro, {
             'method': ReducedMethods(m).name,
             'entangled_qbits': ent_qbits_str,
@@ -396,7 +397,18 @@ class MixedReducedStatesGenerator():
         qubits_perm = list(permutations(list(np.arange(self.num_qubits))))
         rand_perm = qubits_perm[np.random.randint(len(qubits_perm))]
         ro = permute_matrix(rand_perm, ro)
-        return ro
+        return ro, rand_perm
+
+
+    def _permute_qubit_ids(self, qubits_ids, permutation):
+        permuted_qubit_ids = []
+        for q in qubits_ids:
+            if type(q) == int:
+                new_q = permutation.index(q)
+            else:
+                new_q = tuple([permutation.index(qb) for qb in q])
+            permuted_qubit_ids.append(new_q)
+        return permuted_qubit_ids
     
 
     # random from Haar metrics
@@ -439,7 +451,7 @@ class MixedReducedStatesGenerator():
                 dummy_indx += 1
 
             if self.with_permutations:
-                ro = self._permute_matrix(ro)
+                ro, _ = self._permute_matrix(ro)
 
             if save_data_dir:
                 save_dens_matrix_with_labels(self.num_qubits, f"dens{start_index + i}", ro, f"random_mixed", 'random', save_data_dir, ppt = label_potent_ppt, separate_bipart=encoded, not_ent_qbits= not_ent_qbits, zero_neg= zero_neg, discord = discord)
