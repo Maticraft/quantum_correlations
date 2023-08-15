@@ -4,7 +4,8 @@ import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from commons.metrics import generate_parametrized_qs, global_entanglement_bipartitions
 from math import tan
-from commons.pytorch_utils import CNN, VectorSiamese, loc_op_circ, FancySeparator, separator_predict, save_acc
+from commons.models.separators import FancySeparator
+from commons.pytorch_utils import CNN, VectorSiamese, loc_op_circ, separator_predict, save_acc
 import torch
 
 

@@ -16,6 +16,8 @@ from qiskit import Aer
 
 from commons.data.circuit_ops import permute_matrix, local_randomize_matrix, local_randomization, random_entanglement
 from commons.metrics import bipartitions_num
+from commons.models.separators import FancySeparator
+from commons.models.separators import Separator
 
 
 class DensityMatricesDataset(Dataset):
@@ -87,6 +89,51 @@ class DensityMatricesDataset(Dataset):
         parsed_data = [row.rstrip("\n").split(', ') for row in data]
 
         return parsed_data
+
+
+class BipartitionMatricesDataset(Dataset):
+
+    def __init__(self, dictionary, root_dir, threshold, data_limit = None):
+        self.dictionary = self.load_dict(dictionary)[:data_limit]
+        self.root_dir = root_dir
+        self.data_limit = data_limit
+        self.bipart_num = len(self.dictionary[0]) - 1
+        self.threshold = threshold
+
+
+    def __len__(self):
+        if self.data_limit != None:
+            return self.data_limit
+        else:
+            return len(self.dictionary)
+
+
+    def __getitem__(self, idx):
+      if torch.is_tensor(idx):
+        idx = idx.tolist()
+
+      filename = self.dictionary[idx][0] + ".npy"
+
+      matrix_name = os.path.join(self.root_dir, filename)
+      matrix = np.load(matrix_name)
+      matrix_r = np.real(matrix)
+      matrix_im = np.imag(matrix)
+
+      tensor = torch.from_numpy(np.stack((matrix_r, matrix_im), axis=0))
+
+      label = torch.tensor([1. if float(self.dictionary[idx][i]) > self.threshold else 0. for i in range(1, len(self.dictionary[0]))]).double()
+    
+      return (tensor, label)
+
+
+    def load_dict(self, filepath):
+      
+      with open(filepath, 'r') as dictionary:
+        data = dictionary.readlines()
+
+      parsed_data = [row.rstrip("\n").split(', ') for row in data]
+
+      return parsed_data
 
 
 # General model consisting of:
@@ -232,9 +279,6 @@ class CNN(nn.Module):
     
 
     def forward(self, x):
-        if self.tensor_map:
-            x = self.tensorMap(x)
-
         if self.upconv_num > 0:
             xs = [x]
             for i, upconv in enumerate(self.upconvs):
@@ -433,136 +477,26 @@ class Siamese(CNN):
         return out
 
 
-# Separator model -- NN, which tries to learn density matrices of separate subsystems - if it is possible -> state is separable,
-# if not, then it is entangled
-class Separator(nn.Module):
-    def __init__(self, qbits_num, out_ch_per_rho, filters_ratio, kernel_size, output_dim = 2, dilation = 1, ratio_type = None, padding = 0, stride = 1, input_channels = 2):
-        super(Separator, self).__init__()
-
-        self.input_channels = input_channels
-        self.dim = 2**qbits_num
-        self.kernel_size = kernel_size
-        self.qbits_num = qbits_num
-        self.ocpr = out_ch_per_rho
-        self.output_dim = output_dim
-
-        in_ch = self.input_channels
-        fr = filters_ratio
-        self.out_dim = self.dim
-
-        convs = []
-        while (floor((self.out_dim - dilation*(self.kernel_size - 1) - 1)/stride + 1) > self.output_dim):
-            out_ch = int(in_ch*fr)
-            convs.append(nn.Conv2d(in_ch, out_ch, self.kernel_size, stride, dilation = dilation, padding= padding).double())
-            convs.append(nn.ReLU())
-            in_ch = out_ch
-
-            if ratio_type == 'sqrt':
-                fr = np.sqrt(fr)
-            elif ratio_type == 'sq':
-                fr = fr ** 2
-
-            self.out_dim = floor((self.out_dim + 2*padding - dilation*(self.kernel_size - 1) - 1)/stride + 1)
-
-        self.out_ch = out_ch
-        self.convs = nn.Sequential(*convs)
-
-        ks = int(-(stride*(self.conv_out_dim - 1) + 1 - self.conv_out_dim)/dilation + 1)
-
-        self.out_dim = floor((self.out_dim + 2*padding - dilation*(ks - 1) - 1)/stride + 1)
-        assert self.out_dim == self.output_dim, "Wrong output dimension"
-
-        self.output_convs = nn.ModuleList([nn.Conv2d(in_ch, self.input_channels*self.ocpr, ks, dilation = dilation) for i in range(self.qbits_num)])
-        
+class FancySeparatorEnsembleClassifier(nn.Module):
+    def __init__(self, qbits_num, sep_ch, sep_fc_num, output_size, ensemble_size):
+        super(FancySeparatorEnsembleClassifier, self).__init__()
+        self.ensemble_size = ensemble_size
+        self.separators = nn.ModuleList([FancySeparator(qbits_num, sep_ch, fc_layers=sep_fc_num) for _ in range(ensemble_size)])
+        self.classifier = CNN(qbits_num, output_size, 3, 5, 2, filters_ratio=4, ratio_type='sqrt', mode='classifier', input_channels=2*ensemble_size)
 
     def forward(self, x):
-        x = self.convs(x)
-        output = [out_conv(x) for out_conv in self.output_convs]
-
-        return output
-
-
-# Fancy Separator model -- NN, which tries to learn density matrices of separate subsystems - if it is possible -> state is separable,
-# if not, then it is entangled
-# This model applies different convolutions in order to receive different density matrices for separate qubits 
-class FancySeparator(nn.Module):
-    def __init__(self, qbits_num, out_ch_per_rho, input_channels = 2, fc_layers = 0):
-        super(FancySeparator, self).__init__()
-
-        self.input_channels = input_channels
-        self.dim = 2**qbits_num
-        self.qbits_num = qbits_num
-        self.ocpr = out_ch_per_rho
-        self.output_channels = self.input_channels*self.ocpr
-        self.fc_layers_num = fc_layers
-
-        self.convs, self.convs_prim = self.make_convs(self.qbits_num, self.ocpr, self.input_channels, self.output_channels)
-        if self.fc_layers_num > 0:
-            self.fc_layers = nn.ModuleList(
-                [
-                    nn.ModuleList(
-                        [nn.Linear(self.output_channels*2*2, self.output_channels*2*2) for i in range(fc_layers)]
-                    ) for j in range(self.qbits_num)
-                ]
-            )
-
-    def make_convs(self, qubits_num, ocpr, in_channels, out_channels):
-        assert qubits_num >= 2, "Wrong number of qubits"
-        ch_multiplier = ocpr**(1/(qubits_num-1))
-        in_ch = in_channels
-        out_ch = int(in_ch*ch_multiplier)
-
-        convs = []
-        convs_prim = []
-        for i in range(1, qubits_num - 1):
-            curr_dim = 2**(qubits_num - i)
-            convs.append(nn.Conv2d(in_ch, out_channels, kernel_size= curr_dim, stride= curr_dim))
-            convs_prim.append(nn.Conv2d(in_ch, out_ch, kernel_size= 2, dilation=curr_dim))
-            
-            in_ch = out_ch
-            out_ch = int(in_ch*ch_multiplier)
-
-        convs.append(nn.Conv2d(in_ch, out_channels, kernel_size= 2, stride= 2))
-        convs.append(nn.Conv2d(in_ch, out_channels, kernel_size= 2, dilation=2))
-
-        return nn.ModuleList(convs), nn.ModuleList(convs_prim)
-
-            
-    def forward(self, x, noise = False):
-        x_temp = x
-        output = [self.convs[0](x_temp)]            
-        for i in range(1, self.qbits_num - 1):
-            x_temp = self.convs_prim[i-1](x_temp)
-            output.append(self.convs[i](x_temp))
-        output.append(self.convs[self.qbits_num - 1](x_temp))
-
-        if noise:
-            probs = self.noise(x)
-            for i in range(self.qbits_num):
-                for j in range(self.ocpr):
-                    output[i][:, j, :, :] *= probs[:, i, j].view(-1, 1, 1)
-                    output[i][:, self.ocpr + j, :, :] *= probs[:, i, j].view(-1, 1, 1)
-
-        if self.fc_layers_num > 0:
-            for i in range(self.qbits_num):
-                output[i] = output[i].view(-1, self.output_channels*2*2)
-                for j in range(self.fc_layers_num):
-                    output[i] = F.relu((output[i]))
-                    output[i] = self.fc_layers[i][j](output[i])
-                output[i] = output[i].view(-1, self.output_channels, 2, 2)
-
-        return output
-
-    
-    def noise(self, x):
-        noise = torch.randn(x.shape[0], self.qbits_num, self.ocpr).to(x.device)
-        noise = F.softmax(noise, dim = 2)
-        return noise
+        separators_outputs = [separator(x) for separator in self.separators]
+        reconstructed_matrices = [rho_reconstruction(x, separator_output) for separator_output in separators_outputs]
+        reconstructed_matrices = torch.stack(reconstructed_matrices, dim = 1)
+        difference_matrices = reconstructed_matrices - x.unsqueeze(1)
+        difference_matrices = difference_matrices.view(-1, 2*self.ensemble_size, x.shape[-2], x.shape[-1])
+        classifier_output = self.classifier(difference_matrices)
+        return classifier_output
 
 
 class FancyClassifier(FancySeparator):
-    def __init__(self, qbits_num, sep_ch, fc_num, output_size, fc_hidden_size):
-        super(FancyClassifier, self).__init__(qbits_num, sep_ch)
+    def __init__(self, qbits_num, sep_ch, sep_fc_num, fc_num, output_size, fc_hidden_size):
+        super(FancyClassifier, self).__init__(qbits_num, sep_ch, fc_layers=sep_fc_num)
         self.fc_dim = 2*sep_ch*4*qbits_num
         fc_layers = []
         fc_layers.append(nn.Linear(self.fc_dim, fc_hidden_size))
@@ -572,25 +506,15 @@ class FancyClassifier(FancySeparator):
             fc_layers.append(nn.Linear(fc_hidden_size, fc_hidden_size))
             fc_layers.append(nn.ReLU())
          
-        self.fc_layers = nn.Sequential(*fc_layers)
-        self.d_out = nn.Linear(fc_hidden_size, output_size)  
+        self.output_fc_layers = nn.Sequential(*fc_layers)
+        self.final_layer = nn.Linear(fc_hidden_size, output_size)  
 
     def forward(self, x):
         sep_mats = super().forward(x)
         x_mid = torch.stack(sep_mats, dim=1)
         x_mid = x_mid.view(-1, self.fc_dim)
-        out = self.fc_layers(x_mid)
-        return torch.sigmoid(self.d_out(out))
-
-
-class SiameseFancySeparator(FancySeparator):
-    def __init__(self, qbits_num, sep_ch, input_channels = 2):
-        super(SiameseFancySeparator, self).__init__(qbits_num, sep_ch, input_channels)
-
-    def forward(self, x1, x2):
-        sep_mats1 = super().forward(x1)
-        sep_mats2 = super().forward(x2)
-        return sep_mats1, sep_mats2
+        out = self.output_fc_layers(x_mid)
+        return torch.sigmoid(self.final_layer(out))
 
 
 class CombinedClassifier(nn.Module):
@@ -655,111 +579,6 @@ class VectorSiameseCC(CombinedClassifier):
                                         indices.append(((i1,j1), (i2,j2)))
         return indices
 
-
-# SeparatorBipart model -- NN, which tries to learn density matrices of separate subsystems (with division made for two subsystems only) 
-# - if it is possible -> state is separable, if not, then it is entangled
-class SeparatorBipart(nn.Module):
-    def __init__(self, qbits_num, out_ch_per_rho, filters_ratio, kernel_size, output_dims = (2, 4), dilation = 1, ratio_type = None, padding = 0):
-        super(SeparatorBipart, self).__init__()
-
-        self.input_channels = 2
-        self.dim = 2**qbits_num
-        self.kernel_size = kernel_size
-        self.qbits_num = qbits_num
-        self.ocpr = out_ch_per_rho
-        self.output_dims = output_dims
-
-        self.biparts_num = self.qbits_num
-
-        in_ch = self.input_channels
-        fr = filters_ratio
-        self.out_dim = self.dim
-
-        convs = []
-        while (self.out_dim - dilation*(self.kernel_size - 1)) > max(self.output_dims):
-            out_ch = int(in_ch*fr)
-            convs.append(nn.Conv2d(in_ch, out_ch, self.kernel_size, dilation = dilation, padding= padding).double())
-            convs.append(nn.ReLU())
-            in_ch = out_ch
-
-            if ratio_type == 'sqrt':
-                fr = np.sqrt(fr)
-            elif ratio_type == 'sq':
-                fr = fr ** 2
-
-            self.out_dim += 2*padding - dilation*(self.kernel_size - 1)
-
-        self.out_ch = out_ch
-        self.convs = nn.Sequential(*convs)
-
-        ks0 = int((self.out_dim - self.output_dims[0]) / dilation) + 1
-        self.out_dim0 = self.out_dim + 2*padding - dilation*(ks0 - 1)
-        assert self.out_dim0 == self.output_dims[0], "Wrong output dimension 0"
-
-        ks1 = int((self.out_dim - self.output_dims[1]) / dilation) + 1
-        self.out_dim1 = self.out_dim + 2*padding - dilation*(ks1 - 1)
-        assert self.out_dim1 == self.output_dims[1], "Wrong output dimension 1"
-
-        self.output_convs = nn.ModuleList([nn.Conv2d(in_ch, 2*self.ocpr, ks0, dilation = dilation), nn.Conv2d(in_ch, 2*self.ocpr, ks1, dilation = dilation)])
-        
-
-    def forward(self, x):
-        """
-        output dims:
-            0 - biparts
-            1 - separate matrices (e.g. of dim 2 and 4)
-            2 - examples
-            3 - channels
-            4, 5 - density matrix
-        """
-        x = self.convs(x)
-        output = [out_conv(x) for out_conv in self.output_convs]
-
-        return output
-
-
-# SeparatorBipart model -- NN, which tries to learn density matrices of separate subsystems (with division made for 1|N-1 subsystems only) 
-# - if it is possible -> state is separable, if not, then it is entangled 
-class FancySeparatorBipart(nn.Module):
-    def __init__(self, qbits_num, out_ch_per_rho):
-        super(FancySeparatorBipart, self).__init__()
-
-        self.input_channels = 2
-        self.dim = 2**qbits_num
-        self.qbits_num = qbits_num
-        self.ocpr = out_ch_per_rho
-        self.output_channels = self.input_channels*self.ocpr
-        self.biparts_num = self.qbits_num
-
-        self.conv, self.conv_prim = self.make_convs(self.qbits_num, self.ocpr, self.input_channels, self.output_channels)
-
-    # simple for 1|N-1 biparts only
-    def make_convs(self, qubits_num, ocpr, in_channels, out_channels):
-        assert qubits_num >= 2, "Wrong number of qubits"
-        ch_multiplier = ocpr
-        in_ch = in_channels
-        out_ch = int(in_ch*ch_multiplier)
-        dim = 2**qubits_num
-        small_dim = 2 # constant for 1|N-1
-        large_dim = dim // small_dim
-
-        conv = nn.Conv2d(in_ch, out_channels, kernel_size= large_dim, stride= large_dim) #conv applied to obtain first matrices
-        conv_prim = nn.Conv2d(in_ch, out_channels, kernel_size= small_dim, stride= 1, dilation = large_dim) #conv applied to obtain second (complementary) matrices
-        
-        return conv, conv_prim
-
-
-    def forward(self, x):
-        """
-        output dims:
-            0 - separate matrices (e.g. of dim 2 and 4); 
-            2 - examples;    
-            3 - channels;    
-            4, 5 - density matrix   
-        """
-        output = [torch.sigmoid(self.conv(x)), torch.sigmoid(self.conv_prim(x))]
-
-        return output
 
 
 
@@ -1362,6 +1181,7 @@ def train_vector_siamese_with_purificator(model_siam, model_pure, device, train_
 
 def train(model, device, train_loader, optimizer, criterion, epoch_number, interval):
     model.train()
+    model.to(device)
     train_loss = 0.
 
     for batch_idx, (data, target) in enumerate(train_loader):
@@ -1900,6 +1720,7 @@ def test_vector_siamese(model, device, test_loader, criterion, message, confusio
 
 def test(model, device, test_loader, criterion, message, confusion_matrix = False, confusion_matrix_dim = None, bipart = False, decision_point = 0.5, balanced_acc = False):
     model.eval()
+    model.to(device)
     test_loss = 0.
     correct = 0
     
@@ -2496,12 +2317,12 @@ def plot_loss(train_loss, validation_loss, title, log_scale = False):
     plt.show()
 
 
-def save_acc(file_path, x, accuracies):
+def save_acc(file_path, x, accuracies, write_mode = "a"):
     acc_str = ""
     for acc in accuracies:
         acc_str += "  " + str(acc)
 
-    with open(file_path, "a") as f:
+    with open(file_path, write_mode) as f:
         f.write(str(x) + acc_str + "\n")
 
 

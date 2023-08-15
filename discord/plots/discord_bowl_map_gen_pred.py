@@ -6,7 +6,8 @@ import matplotlib.patches as mpatches
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 from commons.metrics import generate_parametrized_qs, global_entanglement_bipartitions
 from math import tan
-from commons.pytorch_utils import loc_op_circ, FancySeparator, separator_predict, all_perms, trace_predict
+from commons.models.separators import FancySeparator
+from commons.pytorch_utils import loc_op_circ, separator_predict, all_perms, trace_predict
 import torch
 
 plt.rc('font', size=16) #controls default text size
