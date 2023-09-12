@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 
 import numpy as np
+import scipy
 
 from commons.metrics import combinations_num, global_entanglement_bipartitions, global_entanglement
 
@@ -16,7 +17,7 @@ NUM_NEAR_ZERO_EIGVALS_BIPART_DICT_NAME = "num_near_zero_eigvals_bipartitions.txt
 CONFIDENCE_THRESHOLD = 0.0001
 
 # Save generated density matrix with corresponding metrics to the given destination, depending on the data type
-def save_dens_matrix_with_labels(num_qubits, filename, ro, method, entangled_qbits, save_data_dir = "train", ppt = False, separate_bipart = False, not_ent_qbits = [], zero_neg = 'incl', discord = False, trace_reconstruction = False, num_near_zero_eigvals = None):
+def save_dens_matrix_with_labels(num_qubits, filename, ro, method, entangled_qbits, save_data_dir = "train", ppt = False, separate_bipart = False, not_ent_qbits = [], zero_neg = 'incl', discord = False, trace_reconstruction = False, num_near_zero_eigvals = None, format = 'npy'):
     if ppt and zero_neg == 'none':
         raise NotImplementedError("Labeling potential PPTES not implemented for nonzero states")
 
@@ -33,26 +34,26 @@ def save_dens_matrix_with_labels(num_qubits, filename, ro, method, entangled_qbi
     
     if num_near_zero_eigvals_matches(num_near_zero_eigvals, bipart_metrics):
         if zero_neg == 'incl':
-            _save_data(file_path, ro, filename, dictionary_path, method, entangled_qbits, all_bipart_metrics=bipart_metrics, bipart_dict_paths=bipart_dict_paths, extra_info=extra_info, ppt=ppt)
+            _save_data(file_path, ro, filename, dictionary_path, method, entangled_qbits, all_bipart_metrics=bipart_metrics, bipart_dict_paths=bipart_dict_paths, extra_info=extra_info, ppt=ppt, format=format)
 
         elif zero_neg == 'only':
             if neg_glob < CONFIDENCE_THRESHOLD:
-                _save_data(file_path, ro, filename, dictionary_path, method, entangled_qbits, all_bipart_metrics=bipart_metrics, bipart_dict_paths=bipart_dict_paths, extra_info=extra_info, ppt=ppt)
+                _save_data(file_path, ro, filename, dictionary_path, method, entangled_qbits, all_bipart_metrics=bipart_metrics, bipart_dict_paths=bipart_dict_paths, extra_info=extra_info, ppt=ppt, format=format)
 
         elif zero_neg == 'none':
             comb_num = combinations_num(len(not_ent_qbits))
             if neg_glob >= CONFIDENCE_THRESHOLD and np.count_nonzero(np.array(neg_bipart) <= CONFIDENCE_THRESHOLD) <= comb_num:
-                _save_data(file_path, ro, filename, dictionary_path, method, entangled_qbits, all_bipart_metrics=bipart_metrics, bipart_dict_paths=bipart_dict_paths, extra_info=extra_info, ppt=ppt)
+                _save_data(file_path, ro, filename, dictionary_path, method, entangled_qbits, all_bipart_metrics=bipart_metrics, bipart_dict_paths=bipart_dict_paths, extra_info=extra_info, ppt=ppt, format=format)
         
         elif zero_neg == 'zero_discord':
             if (disc_glob <= CONFIDENCE_THRESHOLD) or (neg_glob >= CONFIDENCE_THRESHOLD):
                 if np.count_nonzero(np.array(neg_bipart) <= CONFIDENCE_THRESHOLD) == np.count_nonzero(np.array(disc_bipart) <= CONFIDENCE_THRESHOLD):
-                    _save_data(file_path, ro, filename, dictionary_path, method, entangled_qbits, all_bipart_metrics=bipart_metrics, bipart_dict_paths=bipart_dict_paths, extra_info=extra_info, ppt=ppt)
+                    _save_data(file_path, ro, filename, dictionary_path, method, entangled_qbits, all_bipart_metrics=bipart_metrics, bipart_dict_paths=bipart_dict_paths, extra_info=extra_info, ppt=ppt, format=format)
         
         elif zero_neg == 'zero_discord_only':
             if (disc_glob <= CONFIDENCE_THRESHOLD) or (separate_bipart and (neg_glob >= CONFIDENCE_THRESHOLD)):
                 if np.count_nonzero(np.array(neg_bipart) <= CONFIDENCE_THRESHOLD) == np.count_nonzero(np.array(disc_bipart) <= CONFIDENCE_THRESHOLD):
-                    _save_data(file_path, ro, filename, dictionary_path, method, entangled_qbits, all_bipart_metrics=bipart_metrics, bipart_dict_paths=bipart_dict_paths, extra_info=extra_info, ppt=ppt)
+                    _save_data(file_path, ro, filename, dictionary_path, method, entangled_qbits, all_bipart_metrics=bipart_metrics, bipart_dict_paths=bipart_dict_paths, extra_info=extra_info, ppt=ppt, format=format)
         else:
             raise ValueError('Wrong value for zero_neg parameter: {}'.format(zero_neg))
 
@@ -109,8 +110,13 @@ def _get_bipart_metrics(ro, discord, data_dir, separate_bipart, ppt, not_ent_qbi
     return bipart_metrics, bipart_dict_paths
 
 
-def _save_data(file_path, ro, filename, dictionary_path, method, entangled_qbits, all_bipart_metrics=[], bipart_dict_paths=[], extra_info="", ppt=False):
-    np.save(file_path, ro.data)
+def _save_data(file_path, ro, filename, dictionary_path, method, entangled_qbits, all_bipart_metrics=[], bipart_dict_paths=[], extra_info="", ppt=False, format='npy'):
+    if format == 'npy':
+        np.save(file_path, ro.data)
+    elif format == 'mat':
+        scipy.io.savemat(file_path, {'rho': ro.data})
+    else:
+        raise ValueError('Wrong format: {}'.format(format))
     for bipart_metrics, bipart_dict_path in zip(all_bipart_metrics, bipart_dict_paths):
         _save_bipart_metrics(bipart_metrics, filename, bipart_dict_path)
     _save_common_metrics(dictionary_path, filename, method, entangled_qbits, ro, extra_info, ppt)
