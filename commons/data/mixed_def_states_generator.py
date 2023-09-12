@@ -116,6 +116,7 @@ class MixedDefStatesGenerator():
 
         return_matrices = []
         for i in range(len(mixed_dms)):
+            not_ent_qbits_i = not_ent_qbits
             if num_pure_states == 'random':
                 nps = npss[i]
             else:
@@ -124,13 +125,13 @@ class MixedDefStatesGenerator():
             
             if self.with_permutations:
                 ro, permutation = self._permute_matrix(ro)
-                not_ent_qbits = self._permute_qubit_ids(not_ent_qbits, permutation)
+                not_ent_qbits_i = self._permute_qubit_ids(not_ent_qbits, permutation)
 
             if save_data_dir:
                 if specified_method == 'simple_non_product_zero_discord' or specified_method == 'random_non_product_zero_discord':
-                    save_dens_matrix_with_labels(self.num_qubits, f"dens{start_index + i}", ro, "random mixed from pure", "{}".format(nps), save_data_dir, ppt= label_potent_ppt, separate_bipart=encoded, zero_neg= zero_neg, not_ent_qbits=not_ent_qbits, discord = discord, trace_reconstruction=True)
+                    save_dens_matrix_with_labels(self.num_qubits, f"dens{start_index + i}", ro, "random mixed from pure", "{}".format(nps), save_data_dir, ppt= label_potent_ppt, separate_bipart=encoded, zero_neg= zero_neg, not_ent_qbits=not_ent_qbits_i, discord = discord, trace_reconstruction=True)
                 else:
-                    save_dens_matrix_with_labels(self.num_qubits, f"dens{start_index + i}", ro, "random mixed from pure", "{}".format(nps), save_data_dir, ppt= label_potent_ppt, separate_bipart=encoded, zero_neg= zero_neg, not_ent_qbits=not_ent_qbits, discord = discord)
+                    save_dens_matrix_with_labels(self.num_qubits, f"dens{start_index + i}", ro, "random mixed from pure", "{}".format(nps), save_data_dir, ppt= label_potent_ppt, separate_bipart=encoded, zero_neg= zero_neg, not_ent_qbits=not_ent_qbits_i, discord = discord)
             else:
                 return_matrices.append(ro)
         if not save_data_dir:
@@ -206,7 +207,7 @@ class MixedDefStatesGenerator():
                 raise Exception("simple_non_product_zero_discord method is only supported for number of pure states = 2")
 
             elif specified_method == 'random_non_product_zero_discord':
-                dm = self._generate_single_mixed_random_npzd_state(dms, probs, nps, np.arange(len(dms // 2)))
+                dm = self._generate_single_mixed_random_npzd_state(dms, probs, nps, np.arange(len(dms) // 2))
                 mixed_dms.append(dm)
 
             else:

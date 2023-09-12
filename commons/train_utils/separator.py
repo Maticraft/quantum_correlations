@@ -7,13 +7,29 @@ import numpy as np
 import torch
 
 
-def train_separator(model, device, train_loader, optimizer, criterion, epoch_number, interval, use_noise = False, enforce_symmetry = False, train_on_entangled = False):
+def train_separator(model, device, train_loader, optimizer, criterion, epoch_number, interval, use_noise = False, enforce_symmetry = False, train_on_entangled = False, previous_separators = [], previous_separators_threshold = 0.01):
     train_loss = 0.
+    num_of_excluded_states = 0
 
     for batch_idx, (data, target) in enumerate(train_loader):
 
         data, target = data.to(device), target.to(device)
         optimizer.zero_grad()
+
+        if previous_separators:
+            for prev_sep in previous_separators:
+                prev_sep.eval()
+                with torch.no_grad():
+                    output = prev_sep(data)
+                    loss = separator_loss(data, output, criterion)
+                    loss = loss.view(loss.shape[0], -1).mean(dim=-1)
+                    data = data[loss > previous_separators_threshold]
+                    target = target[loss > previous_separators_threshold]
+                    num_of_excluded_states += len(loss[torch.squeeze(loss <= previous_separators_threshold)])
+                    if len(data) == 0:
+                        break
+        if len(data) == 0:
+            continue
 
         if use_noise:
             output = [model(data, noise = True)]
@@ -57,9 +73,10 @@ def train_separator(model, device, train_loader, optimizer, criterion, epoch_num
         train_loss += total_loss.item()
 
     train_loss /= len(train_loader)
+    frq_of_excluded_states = num_of_excluded_states / len(train_loader.dataset)
 
     print('\nTrain set: Average loss: {:.4f}'.format(train_loss))
-    return train_loss
+    return train_loss, frq_of_excluded_states
 
 
 def train_siamese_separator(model, device, train_loader, optimizer, criterion, epoch_number, interval):

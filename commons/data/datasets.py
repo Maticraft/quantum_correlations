@@ -1,14 +1,17 @@
+import os
+
 import numpy as np
 import torch
 from torch.utils.data import Dataset
+from qiskit.quantum_info import DensityMatrix
 
-import os
+from commons.data.savers import DICTIONARY_NAME, MATRICES_DIR_NAME
 
 
 class DensityMatricesDataset(Dataset):
 
     def __init__(self, dictionary, root_dir, metrics, threshold, data_limit = None):
-        self.dictionary = self.load_dict(dictionary)
+        self.dictionary = load_dict(dictionary)
         self.root_dir = root_dir
         self.metrics = metrics
         self.threshold = threshold
@@ -29,11 +32,17 @@ class DensityMatricesDataset(Dataset):
         elif self.metrics == "realignment":
             self.label_pos = 7
 
-        elif self.metrics == "discord":
+        elif self.metrics == "numerical_separability":
             self.label_pos = 8
 
-        elif self.metrics == "trace":
+        elif self.metrics == "num_near_zero_eigvals":
             self.label_pos = 9
+
+        elif self.metrics == "discord":
+            self.label_pos = 10
+
+        elif self.metrics == "trace":
+            self.label_pos = 11
 
         else:
             raise ValueError('Wrong metrics')
@@ -67,19 +76,10 @@ class DensityMatricesDataset(Dataset):
         return (tensor, label)
 
 
-    def load_dict(self, filepath):
-        with open(filepath, 'r') as dictionary:
-            data = dictionary.readlines()
-
-        parsed_data = [row.rstrip("\n").split(', ') for row in data]
-
-        return parsed_data
-
-
 class BipartitionMatricesDataset(Dataset):
 
     def __init__(self, dictionary, root_dir, threshold, data_limit = None):
-        self.dictionary = self.load_dict(dictionary)[:data_limit]
+        self.dictionary = load_dict(dictionary)[:data_limit]
         self.root_dir = root_dir
         self.data_limit = data_limit
         self.bipart_num = len(self.dictionary[0]) - 1
@@ -111,11 +111,41 @@ class BipartitionMatricesDataset(Dataset):
       return (tensor, label)
 
 
-    def load_dict(self, filepath):
+class DensityMatrixLoader:
+    def __init__(self, path, label_idx = 6, threshold = 0.0001):
+        self.path = path
+        self.dictionary = load_dict(os.path.join(path, DICTIONARY_NAME))
+        self.matrices_dir = os.path.join(path, MATRICES_DIR_NAME)
+        self.label_pos = label_idx
+        self.threshold = threshold
 
-      with open(filepath, 'r') as dictionary:
+    def __getitem__(self, idx):
+        filename = self.dictionary[idx][0] + ".npy"
+        matrix_name = os.path.join(self.matrices_dir, filename)
+        matrix = np.load(matrix_name)
+        label = float(self.dictionary[idx][self.label_pos])
+        if label > self.threshold:
+            label = 1
+        else:
+            label = 0
+
+        return DensityMatrix(matrix), label
+    
+    def __len__(self):
+        return len(self.dictionary)
+
+    def __iter__(self):
+        current_index = 0
+        while current_index < len(self.dictionary):
+            filename = self.dictionary[current_index][0] + ".npy"
+            matrix_name = os.path.join(self.matrices_dir, filename)
+            matrix = np.load(matrix_name)
+            yield DensityMatrix(matrix)
+            current_index += 1
+
+
+def load_dict(filepath):
+    with open(filepath, 'r') as dictionary:
         data = dictionary.readlines()
-
-      parsed_data = [row.rstrip("\n").split(', ') for row in data]
-
-      return parsed_data
+    parsed_data = [row.rstrip("\n").split(', ') for row in data]
+    return parsed_data

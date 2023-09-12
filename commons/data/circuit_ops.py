@@ -113,14 +113,9 @@ def multiple_local_randomization(qbits, circuits, num_gates, preserve_orthogonal
 # given a permutation (qubits list with new order) permutes a circuit to reflect that new order of qubits
 # e.g. for 4 qubits circuit permutation [0, 1, 3, 2] results in swapping 3rd and 4th qubits
 def permute(permutation, circuit):
-    qbits = list(np.arange(circuit.num_qubits))
-
-    permuted_qbits = []
-    for i in range(len(qbits)):
-        if permutation[i] not in permuted_qbits:
-            if qbits[i] != permutation[i]:
-                circuit.swap(qbits[i], permutation[i])
-                permuted_qbits.append(qbits[i])
+    for i in range(circuit.num_qubits):
+        if permutation[i] > i:
+            circuit.swap(i, permutation[i])
 
 
 # Permutation of a density matrix

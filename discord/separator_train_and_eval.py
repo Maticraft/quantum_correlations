@@ -1,4 +1,6 @@
+import sys
 import os
+sys.path.append('./')
 
 import torch
 import torch.nn as nn
@@ -16,7 +18,7 @@ from commons.train_utils.separator import train_separator, train_siamese_separat
 
 
 # Common params
-data_dir = './datasets/'
+data_dir = './datasets/3qbits/'
 metrics = 'negativity'
 
 batch_size = 128
@@ -42,27 +44,28 @@ print('Using device:', device)
 gl_sep_val_set = DensityMatricesDataset(data_dir + 'val_separable/dictionary.txt', data_dir + 'val_separable/matrices', metrics, threshold)
 gl_sep_val_loader = DataLoader(gl_sep_val_set, batch_size= batch_size, shuffle = True)
 
-gl_mixed_bal_test_set = DensityMatricesDataset(data_dir + 'mixed_test_balanced_disc/dictionary.txt', data_dir + 'mixed_test_balanced_disc/matrices', "negativity", threshold)
+gl_mixed_bal_test_set = DensityMatricesDataset(data_dir + 'mixed_test_bal/dictionary.txt', data_dir + 'mixed_test_bal/matrices', "negativity", threshold)
 gl_mixed_bal_test_loader = DataLoader(gl_mixed_bal_test_set, batch_size=batch_size)
 
-gl_mixed_bal_test_disc_set = DensityMatricesDataset(data_dir + 'mixed_test_balanced_disc/dictionary.txt', data_dir + 'mixed_test_balanced_disc/matrices', "discord", threshold)
+gl_mixed_bal_test_disc_set = DensityMatricesDataset(data_dir + 'mixed_test_bal/dictionary.txt', data_dir + 'mixed_test_bal/matrices', "discord", threshold)
 gl_mixed_bal_test_disc_loader = DataLoader(gl_mixed_bal_test_disc_set, batch_size=batch_size)
 
-save_path_acc = './classifiers/FancySeparator_l1_{}_3q_o48_{}bacc.pt'
-save_path_loss = './classifiers/FancySeparator_l1_{}_3q_o48_{}bl.pt'
+save_path_acc = './models/3qbits/FancySeparator_l1_{}_o48_{}bacc.pt'
+save_path_loss = './models/3qbits/FancySeparator_l1_{}_o48_{}bl.pt'
 
-count_save_path = './results/discord/bures_sep_{}_{}prediction_thresh_mixed_bal_bal_acc_log.txt'
-train_path =  './results/discord/bures_sep_{}_{}train_loss.txt'
+
+count_save_path = './results/3qbits/discord/l1_sep_{}_{}prediction_thresh_mixed_bal_bal_acc_log.txt'
+train_path =  './results/3qbits/discord/l1_sep_{}_{}train_loss.txt'
 
 params0 = {
     'data_name': 'all_sep',
-    'train_dir': 'train_sep',
+    'train_dir': 'train_separable',
     'fc_name': 'fc4_',
     'fc': 4,
 }
 params01 = {
     'data_name': 'all_sep',
-    'train_dir': 'train_sep',
+    'train_dir': 'train_separable',
     'fc_name': '',
     'fc': 0,
 }
@@ -110,7 +113,7 @@ params7 = {
 }
 
 
-params_list = [params4, params5, params6, params7]
+params_list = [params0, params01]
 
 def perform_computations(params):
     train_set = DensityMatricesDataset(data_dir + f'{params["train_dir"]}/dictionary.txt', data_dir + f'{params["train_dir"]}/matrices', metrics, threshold)
@@ -136,11 +139,13 @@ def perform_computations(params):
 
     criterion = nn.L1Loss(reduction='none')
     save_acc(train_path.format(params['data_name'], params['fc_name']), "Epoch", ["train_loss", "validation loss"])
+    os.makedirs(os.path.dirname(save_path_loss.format(params['data_name'], params['fc_name'])), exist_ok=True)
+    os.makedirs(os.path.dirname(save_path_acc.format(params['data_name'], params['fc_name'])), exist_ok=True)
 
     for epoch_number in range(1, epochs + 1):
-        train_loss = train_separator(model, device, train_loader, optimizer, 'bures', epoch_number, batch_interval, use_noise=False, enforce_symmetry=False)
+        train_loss = train_separator(model, device, train_loader, optimizer, criterion, epoch_number, batch_interval, use_noise=False, enforce_symmetry=False)
 
-        loss, acc = test_separator_as_classifier(model, device, gl_sep_val_loader, 'bures', "Pure val set", thresh)
+        loss, acc = test_separator_as_classifier(model, device, gl_sep_val_loader, criterion, "Pure val set", thresh)
 
         if loss < best_loss:
             torch.save(model.state_dict(), save_path_loss.format(params['data_name'], params['fc_name']))
@@ -168,8 +173,8 @@ def perform_computations(params):
     for th in thresholds:
         print("Threshold = {}".format(th))
 
-        l_ent, acc_ent, cm_ent = test_separator_as_classifier(model, device, gl_mixed_bal_test_loader, 'bures', "MEnt:", th, use_noise=False, confusion_matrix=True)
-        l_disc, acc_disc, cm_disc = test_separator_as_classifier(model, device, gl_mixed_bal_test_disc_loader, 'bures', "MDisc:", th, use_noise=False, confusion_matrix=True)
+        l_ent, acc_ent, cm_ent = test_separator_as_classifier(model, device, gl_mixed_bal_test_loader, criterion, "MEnt:", th, use_noise=False, confusion_matrix=True)
+        l_disc, acc_disc, cm_disc = test_separator_as_classifier(model, device, gl_mixed_bal_test_disc_loader, criterion, "MDisc:", th, use_noise=False, confusion_matrix=True)
 
         zdapz = cm_disc[0, 0]
         zd = cm_disc[0, 0] + cm_disc[0, 1]

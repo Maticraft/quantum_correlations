@@ -277,6 +277,13 @@ def _zero_discord_bipart(dens_matrix, qubits, comb):
     return zd
 
 
+def num_near_zero_eigvals(dens_matrix, qargs, threshold = 1.e-3):
+    part_trans = partial_transpose_dense(dens_matrix, qargs)
+    eigvals = np.real(la.eigvals(part_trans.data))
+    total_num_eigvals = np.count_nonzero(np.logical_and(eigvals < threshold, eigvals > -threshold))
+    return total_num_eigvals
+
+
 def _realignment_bipart(dens_matrix, qubits, comb):
     nr1 = KyFan(dens_matrix, qargs = list(comb))
     nr2 = KyFan(dens_matrix, qargs = [q for q in qubits if q not in list(comb)])
@@ -296,6 +303,13 @@ def _negativity_bipart(dens_matrix, ppt, not_ent_qbits, qubits, comb):
 
     neg = (s1 + s2) / 2
     return neg
+
+
+def _near_zero_eigvals_bipart(dens_matrix, qubits, comb):
+    num_eigvals = num_near_zero_eigvals(dens_matrix, qargs = list(comb))
+    num_eigvals2 = num_near_zero_eigvals(dens_matrix, qargs = [q for q in qubits if q not in list(comb)])
+    num_eigvals = (num_eigvals + num_eigvals2) / 2
+    return num_eigvals
 
 
 def _is_comb_entangled(comb, not_ent_qbits):
@@ -350,7 +364,8 @@ def global_entanglement_bipartitions(dens_matrix, measure = "von_Neumann", ppt =
         "realignment": _realignment_bipart,
         "discord": _zero_discord_bipart,
         "trace_reconstruction": lambda rho, qbits, combination: bures_dist_for_trace_rec(rho),
-        "numerical_separability": lambda rho, qbits, combination: numerical_separability(rho, qbits, combination, ppt, not_ent_qbits)
+        "numerical_separability": lambda rho, qbits, combination: numerical_separability(rho, qbits, combination, ppt, not_ent_qbits),
+        "near_zero_eigvals": _near_zero_eigvals_bipart
     }
 
     N = int(log2(dens_matrix.dim))
@@ -419,9 +434,9 @@ def combinations_num(qubits_num):
     return l
 
 # manual extension for toqito symmetric measure for separability
-def numerical_separability(dens_matrix, qubits, comb, is_pptes=False, not_ent_qubits = []):
+def numerical_separability(dens_matrix, qubits, comb, is_pptes=False, not_ent_qubits = [], threshold = 1.e-3):
     neg = _negativity_bipart(dens_matrix, ppt=False, not_ent_qbits=not_ent_qubits,  qubits=qubits, comb=comb)
-    if not is_pptes or neg > 0:
+    if not is_pptes or neg > threshold:
         return neg
     num_qubits = len(qubits)
     num_qubits_in_comb = len(comb)

@@ -160,7 +160,7 @@ def generate_parametrized(qbits, encoded, indx = 0, save_data_dir = 'parametrize
             rho = permute_matrix(rand_perm, rho)
         
         save_dens_matrix_with_labels(qbits, f"dens{indx + i}", rho, "random parametrized", 'unknown', save_data_dir, separate_bipart=encoded, zero_neg= zero_neg, discord = discord)
-
+    return indx + examples
     
                 
 # ENTANGLEMENT TRAIN SET 1/2 (SAME FOR ALL 3 DATASETS) - always verified in case of
@@ -234,7 +234,7 @@ def generate_pure_only_train_separable(qubits, encoded, indx = 0, save_data_dir 
 
     mixed_generator = MixedDefStatesGenerator()
     args['start_index'] = mixed_generator.generate_multi_mixed_matrices(**args, examples=int(examples_ratio *40000), num_pure_states= 1, specified_method='kron_sep_circ', base_size=int(examples_ratio*20000))
-    args['start_inxed'] = mixed_generator.generate_multi_mixed_matrices(**args, examples=int(examples_ratio*80000), num_pure_states=1, specified_method='kron_sep_haar', base_size=int(examples_ratio*40000))
+    args['start_index'] = mixed_generator.generate_multi_mixed_matrices(**args, examples=int(examples_ratio*80000), num_pure_states=1, specified_method='kron_sep_haar', base_size=int(examples_ratio*40000))
     return args['start_index']
 
 
@@ -322,7 +322,7 @@ def generate_mixed_biseparable_haar(qubits_num, encoded, indx = 0, save_data_dir
 
 
 # For test use examples_ratio = 0.1
-def generate_biseparable_test(qubits_num, encoded, indx = 0, save_data_dir = 'biseparable_test', examples_ratio = 1., max_num_ps = None, discord = False, zero_neg='none', label_potent_ppt=False):
+def generate_biseparable_test(qubits_num, encoded, indx = 0, save_data_dir = 'biseparable_test', examples_ratio = 1., max_num_ps = None, discord = False, zero_neg='none', label_potent_ppt=False, permute=True):
     bisep_args = {
         'qubits_num': qubits_num,
         'encoded': encoded,
@@ -331,6 +331,7 @@ def generate_biseparable_test(qubits_num, encoded, indx = 0, save_data_dir = 'bi
         'examples_ratio': examples_ratio,
         'max_num_ps': max_num_ps,
         'examples': 20000,
+        'with_permutations': permute,
         'discord': discord,
         'label_potent_ppt': label_potent_ppt,
         'zero_neg': zero_neg,
@@ -433,6 +434,24 @@ def generate_discordant_separable(qubits, encoded, indx = 0, save_data_dir = 'ds
     args['start_index'] = generator.generate_multi_mixed_matrices(**args, specified_method=0, examples=int(examples_ratio*10000), base_size=int(examples_ratio*10000))
     args['start_index'] = generator.generate_multi_mixed_matrices(**args, specified_method='kron_sep_circ', examples=int(examples_ratio*5000), base_size=int(examples_ratio*5000), mixing_mode='outer')
     args['start_index'] = generator.generate_multi_mixed_matrices(**args, specified_method='kron_sep_haar', examples=int(examples_ratio*5000), base_size=int(examples_ratio*5000), mixing_mode='outer')
+    return args['start_index']
+
+
+def generate_pseudo_acin_pptes(qubits, encoded, indx = 0, qubits_glob = 9, save_data_dir = 'pseudo_acin_pptes', examples_ratio = 1., discord = False, zero_neg = 'incl', label_potent_ppt = True):
+    generator = MixedReducedStatesGenerator()
+    args = {
+        'qubits_num': qubits,
+        'pure_state_qubits': qubits_glob,
+        'examples': int(examples_ratio*10000),
+        'save_data_dir': save_data_dir,
+        'encoded': encoded,
+        'discord': discord,
+        'start_index': indx,
+        'num_near_zero_eigvals': 1,
+        'zero_neg': zero_neg,
+        'label_potent_ppt': label_potent_ppt,
+    }
+    args['start_index'] = generator.generate_circuit_matrices(**args, specified_method=ReducedMethods.RandomEntanglement)
     return args['start_index']
 
 

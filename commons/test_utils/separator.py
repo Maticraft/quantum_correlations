@@ -73,48 +73,109 @@ def test_separator_as_classifier(model, device, test_loader, criterion, message,
     with torch.no_grad():
         for data, target in test_loader:
             data, target = data.to(device), target.to(device)
-
-            if use_noise:
-                noise_ch = model.input_channels - 2
-                noise = torch.randn(data.size()[0], noise_ch, data.size()[2], data.size()[3]).to(device)
-                new_data = torch.cat((data, noise), dim = 1)
-
-            else:
-                new_data = data
-
-            output = model(new_data)
-            ch = output[0].size()[1] // 2
-            rho = torch.zeros_like(data[:,0,:,:], dtype = torch.cdouble)
-
-            for i in range(ch):
-                dms = output[0]
-                rho_real = dms[:, i, :, :]
-                rho_imag = dms[:, ch + i, :, :]
-                rho_i = torch.complex(rho_real, rho_imag)
-
-                for j in range(1, len(output)):
-                    dms = output[j]
-                    ch = dms.size()[1] // 2
-                    rho_real = dms[:, i, :, :]
-                    rho_imag = dms[:, ch + i, :, :]
-                    rho_j = torch.complex(rho_real, rho_imag)
-                    rho_i = torch.stack([torch.kron(rho_i[k], rho_j[k]) for k in range(len(rho_i))])
-
-                rho += rho_i
-
-            rho = rho / ch
-
-            if criterion == 'bures':
-                data_complex = torch.complex(data[:, 0, :, :], data[:, 1, :, :])
-                loss = torch.stack([2*torch.abs(1 - torch.sqrt(torch_fidelity(rho[i], data_complex[i]))) for i in range(data_complex.size()[0])])
-            else:
-                rho = torch.stack((rho.real, rho.imag), dim = 1)
-                loss = torch.mean(criterion(rho, data), dim=(1,2,3))
+            loss = calculate_separator_loss(model, device, criterion, use_noise, data, target)
 
             prediction = torch.ones_like(target)
-
             for ex in range(data.size()[0]):
                 if loss[ex] < threshold:
+                    prediction[ex] = 0
+
+                if confusion_matrix:
+                    if target[ex] == 1:
+                        false_test_loss += loss[ex]
+                    else:
+                        true_test_loss += loss[ex]
+
+            correct += prediction.eq(target).sum().item()
+            test_loss += torch.mean(loss).item()
+
+            if confusion_matrix:
+                for i, j in zip(target, prediction):
+                    conf_matrix[int(i), int(j)] += 1
+
+    test_loss /= len(test_loader)
+    acc = 100. * correct / len(test_loader.dataset)
+
+    if confusion_matrix:
+        true_test_loss /= (conf_matrix[0, 0] + conf_matrix[0, 1] + 1.e-7)
+        false_test_loss /= (conf_matrix[1, 0] + conf_matrix[1, 1] + 1.e-7)
+
+
+    print('{}: Average loss: {:.4f}, accuracy: {}/{} ({:.0f}%)\n'.format(message, test_loss, correct, len(test_loader.dataset), acc))
+    if confusion_matrix:
+        print('Confusion matrix:\n{}'.format(conf_matrix))
+        return (test_loss, true_test_loss, false_test_loss), acc, conf_matrix
+
+    return test_loss, acc
+
+
+def calculate_separator_loss(model, device, criterion, use_noise, data, target):
+    if use_noise:
+        noise_ch = model.input_channels - 2
+        noise = torch.randn(data.size()[0], noise_ch, data.size()[2], data.size()[3]).to(device)
+        new_data = torch.cat((data, noise), dim = 1)
+    else:
+        new_data = data
+
+    output = model(new_data)
+    ch = output[0].size()[1] // 2
+    rho = torch.zeros_like(data[:,0,:,:], dtype = torch.cdouble)
+
+    for i in range(ch):
+        dms = output[0]
+        rho_real = dms[:, i, :, :]
+        rho_imag = dms[:, ch + i, :, :]
+        rho_i = torch.complex(rho_real, rho_imag)
+
+        for j in range(1, len(output)):
+            dms = output[j]
+            ch = dms.size()[1] // 2
+            rho_real = dms[:, i, :, :]
+            rho_imag = dms[:, ch + i, :, :]
+            rho_j = torch.complex(rho_real, rho_imag)
+            rho_i = torch.stack([torch.kron(rho_i[k], rho_j[k]) for k in range(len(rho_i))])
+
+        rho += rho_i
+
+    rho = rho / ch
+
+    if criterion == 'bures':
+        data_complex = torch.complex(data[:, 0, :, :], data[:, 1, :, :])
+        loss = torch.stack([2*torch.abs(1 - torch.sqrt(torch_fidelity(rho[i], data_complex[i]))) for i in range(data_complex.size()[0])])
+    else:
+        rho = torch.stack((rho.real, rho.imag), dim = 1)
+        loss = torch.mean(criterion(rho, data), dim=(1,2,3))
+
+    return loss
+
+
+def test_multi_separator_as_classifier(models, device, test_loader, criterion, message, last_threshold, prev_separator_thresholds = [], use_noise=False, confusion_matrix = False):
+    test_loss = 0.
+    true_test_loss = 0.
+    false_test_loss = 0.
+    correct = 0
+
+    assert len(prev_separator_thresholds) == len(models), "Number of thresholds must be equal to number of models"
+
+    if confusion_matrix:
+        conf_matrix = np.zeros((2, 2))
+
+    with torch.no_grad():
+        for data, target in test_loader:
+            data, target = data.to(device), target.to(device)
+            losses = []
+            for model in models:
+                model.eval()
+                loss = calculate_separator_loss(model, device, criterion, use_noise, data, target)
+                losses.append(loss)
+            
+            loss = torch.stack(losses, dim=-1)
+            prediction = torch.ones_like(target)
+            for ex in range(data.size()[0]):
+                for i, prev_separator_threshold in enumerate(prev_separator_thresholds[:-1]):
+                    if loss[ex, i].item() < prev_separator_threshold:
+                        prediction[ex] = 0
+                if loss[ex, -1].item() < last_threshold:
                     prediction[ex] = 0
 
                 if confusion_matrix:

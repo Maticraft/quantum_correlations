@@ -125,7 +125,7 @@ class MixedReducedStatesGenerator():
 
 
     @generate_with_assertion(batch_size=100)
-    def generate_circuit_matrices(self, examples, qubits_num, pure_state_qubits, save_data_dir = None, random_gates = 2, specified_method = None, start_index = 0, encoded = True, label_potent_ppt = False, zero_neg = 'incl', discord = False, fully_entangled = False, with_permutations = False):
+    def generate_circuit_matrices(self, examples, qubits_num, pure_state_qubits, save_data_dir = None, random_gates = 2, specified_method = None, start_index = 0, encoded = True, label_potent_ppt = False, zero_neg = 'incl', discord = False, fully_entangled = False, with_permutations = False, num_near_zero_eigvals = None):
         # possible methods:
         # 0: W state
         # 1: GHZ state
@@ -143,7 +143,8 @@ class MixedReducedStatesGenerator():
             'save_data_dir': save_data_dir,
             'separate_bipart': encoded,
             'zero_neg': zero_neg,
-            'discord': discord     
+            'discord': discord,     
+            'num_near_zero_eigvals': num_near_zero_eigvals
         }
 
         self._initialize_generator(examples, qubits_num, pure_state_qubits, with_permutations)
@@ -207,7 +208,7 @@ class MixedReducedStatesGenerator():
         if len(entangled_qbits_in_subsystem) < self.num_qubits:
             not_entangled_qbits = [q for q in range(self.pure_qubits) if (q not in qbits_for_trace) and (q not in entangled_qbits_in_subsystem)]
             qbits_in_subsystem = [q for q in range(self.pure_qubits) if q not in qbits_for_trace]
-            not_entangled_qbits_inds = [qbits_in_subsystem.index(q) for q in not_entangled_qbits]
+            not_entangled_qbits_inds = [qbits_in_subsystem.index(q) for q in not_entangled_qbits]  # TODO: check if it is correct
 
         reduced_ro = partial_trace(ro, qbits_for_trace)
         ent_qbits_str = str(len(entangled_qbits_in_subsystem)) + "/" + str(len(entangled_qbits))

@@ -1,3 +1,4 @@
+import os
 from itertools import permutations
 
 import matplotlib.pyplot as plt
@@ -225,6 +226,7 @@ def plot_loss(train_loss, validation_loss, title, log_scale = False):
 
 
 def save_acc(file_path, x, accuracies, write_mode = "a"):
+    os.makedirs(os.path.dirname(file_path), exist_ok=True)
     acc_str = ""
     for acc in accuracies:
         acc_str += "  " + str(acc)
