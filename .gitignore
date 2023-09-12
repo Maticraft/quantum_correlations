@@ -1,5 +1,6 @@
 /__pycache__
 /datasets
+/datasets_matlab
 /plots
 /results
 *.json
@@ -11,3 +12,4 @@
 *.pkl
 *.ipynb
 *.pyc
+*.mat

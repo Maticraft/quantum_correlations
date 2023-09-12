@@ -128,7 +128,7 @@ class PureStatesGenerator:
 
 
     @generate_with_assertion(1000)
-    def generate_circuit_matrices(self, qubits_num, examples, save_data_dir = None, random_gates = 2, specified_method = None, start_index = 0, encoded = True, fully_entangled = False, return_matrices = False, discord = False, noise = False, with_permutations = False):
+    def generate_circuit_matrices(self, qubits_num, examples, save_data_dir = None, random_gates = 2, specified_method = None, start_index = 0, encoded = True, fully_entangled = False, return_matrices = False, discord = False, noise = False, with_permutations = False, format = 'npy'):
         # possible methods:
         # 0: pure separable state
         # 1: W state
@@ -143,7 +143,7 @@ class PureStatesGenerator:
                 m, entangled_qbits = params[i]
                 ro = dens_matrices[i]
 
-                save_dens_matrix_with_labels(self.num_qubits, f"dens{start_index + i}", ro, self.methods[m].__name__, entangled_qbits, save_data_dir, separate_bipart=encoded, discord=discord)
+                save_dens_matrix_with_labels(self.num_qubits, f"dens{start_index + i}", ro, self.methods[m].__name__, entangled_qbits, save_data_dir, separate_bipart=encoded, discord=discord, format=format)
             if return_matrices:
                 return dens_matrices
         else:
@@ -192,7 +192,7 @@ class PureStatesGenerator:
 
 
     @generate_with_assertion(1000)
-    def generate_random_haar_matrices(self, qubits_num, examples, save_data_dir = None, start_index = 0, encoded = True, return_matrices = False, discord = False, with_permutations = False):
+    def generate_random_haar_matrices(self, qubits_num, examples, save_data_dir = None, start_index = 0, encoded = True, return_matrices = False, discord = False, with_permutations = False, format = 'npy'):
         self._initialize_generator(examples, qubits_num, with_permutations)
         dim = 2**self.num_qubits
 
@@ -209,7 +209,7 @@ class PureStatesGenerator:
             return matrices
         else:
             for i in range(len(matrices)):
-                save_dens_matrix_with_labels(self.num_qubits, f"dens{start_index + self.num_permutations*i}", matrices[i], f"random_vector", "unknown", save_data_dir, separate_bipart=encoded, discord=discord)
+                save_dens_matrix_with_labels(self.num_qubits, f"dens{start_index + self.num_permutations*i}", matrices[i], f"random_vector", "unknown", save_data_dir, separate_bipart=encoded, discord=discord, format=format)
 
                 if return_matrices:
                     return matrices

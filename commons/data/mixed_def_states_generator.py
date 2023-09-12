@@ -29,7 +29,7 @@ class MixedDefStatesGenerator():
 
 
     @generate_with_assertion(1000)
-    def generate_matrices(self, qubits_num, examples, save_data_dir = None, specified_method = None, start_index = 0, encoded = True, label_potent_ppt = False, with_permutations = False):
+    def generate_matrices(self, qubits_num, examples, save_data_dir = None, specified_method = None, start_index = 0, encoded = True, label_potent_ppt = False, with_permutations = False, format = 'npy'):
         self._initialize_generator(examples, qubits_num, with_permutations)
         d = 2**self.num_qubits
 
@@ -52,7 +52,7 @@ class MixedDefStatesGenerator():
                 ro, _ = self._permute_matrix(ro)
 
             if save_data_dir:
-                save_dens_matrix_with_labels(self.num_qubits, f"dens{start_index + i}", ro, f"mixed from pure {m}", "unknown", save_data_dir, ppt = ppt_flag, separate_bipart= encoded)
+                save_dens_matrix_with_labels(self.num_qubits, f"dens{start_index + i}", ro, f"mixed from pure {m}", "unknown", save_data_dir, ppt = ppt_flag, separate_bipart= encoded, format=format)
             else:
                 return_matrices.append(ro)
         if not save_data_dir:
@@ -101,7 +101,7 @@ class MixedDefStatesGenerator():
 
     # More effective multi matrices generating method, which bases on some number of pregenerated pure states
     @generate_with_assertion(1000)
-    def generate_multi_mixed_matrices(self, qubits_num, examples, num_pure_states, save_data_dir = None, specified_method = None, base_size = None, start_index = 0, encoded = True, label_potent_ppt = False, zero_neg = 'incl', fully_entangled = False, max_num_ps = None, discord = False, mixing_mode = 'outer', with_permutations = False):
+    def generate_multi_mixed_matrices(self, qubits_num, examples, num_pure_states, save_data_dir = None, specified_method = None, base_size = None, start_index = 0, encoded = True, label_potent_ppt = False, zero_neg = 'incl', fully_entangled = False, max_num_ps = None, discord = False, mixing_mode = 'outer', with_permutations = False, format = 'npy'):
         self._initialize_generator(examples, qubits_num, with_permutations)
         if base_size is None:
             base_size = examples
@@ -129,9 +129,9 @@ class MixedDefStatesGenerator():
 
             if save_data_dir:
                 if specified_method == 'simple_non_product_zero_discord' or specified_method == 'random_non_product_zero_discord':
-                    save_dens_matrix_with_labels(self.num_qubits, f"dens{start_index + i}", ro, "random mixed from pure", "{}".format(nps), save_data_dir, ppt= label_potent_ppt, separate_bipart=encoded, zero_neg= zero_neg, not_ent_qbits=not_ent_qbits_i, discord = discord, trace_reconstruction=True)
+                    save_dens_matrix_with_labels(self.num_qubits, f"dens{start_index + i}", ro, "random mixed from pure", "{}".format(nps), save_data_dir, ppt= label_potent_ppt, separate_bipart=encoded, zero_neg= zero_neg, not_ent_qbits=not_ent_qbits_i, discord = discord, trace_reconstruction=True, format=format)
                 else:
-                    save_dens_matrix_with_labels(self.num_qubits, f"dens{start_index + i}", ro, "random mixed from pure", "{}".format(nps), save_data_dir, ppt= label_potent_ppt, separate_bipart=encoded, zero_neg= zero_neg, not_ent_qbits=not_ent_qbits_i, discord = discord)
+                    save_dens_matrix_with_labels(self.num_qubits, f"dens{start_index + i}", ro, "random mixed from pure", "{}".format(nps), save_data_dir, ppt= label_potent_ppt, separate_bipart=encoded, zero_neg= zero_neg, not_ent_qbits=not_ent_qbits_i, discord = discord, format=format)
             else:
                 return_matrices.append(ro)
         if not save_data_dir:

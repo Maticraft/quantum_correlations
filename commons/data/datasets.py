@@ -64,6 +64,7 @@ class DensityMatricesDataset(Dataset):
         if self.format == "npy":
             matrix = np.load(matrix_name)
         elif self.format == 'mat':
+            matrix_name = matrix_name.with_suffix('.mat')
             matrix = scipy.io.loadmat(matrix_name)['rho']
         else:
             raise ValueError('Wrong format')
@@ -110,6 +111,7 @@ class BipartitionMatricesDataset(Dataset):
         if self.format == "npy":
             matrix = np.load(matrix_name)
         elif self.format == 'mat':
+            matrix_name = matrix_name.with_suffix('.mat')
             matrix = scipy.io.loadmat(matrix_name)['rho']
         else:
             raise ValueError('Wrong format')
@@ -139,6 +141,7 @@ class DensityMatrixLoader:
         if self.format == "npy":
             matrix = np.load(matrix_name)
         elif self.format == 'mat':
+            matrix_name = matrix_name.with_suffix('.mat')
             matrix = scipy.io.loadmat(matrix_name)['rho']
         else:
             raise ValueError('Wrong format')
@@ -162,6 +165,7 @@ class DensityMatrixLoader:
             if self.format == "npy":
                 matrix = np.load(matrix_name)
             elif self.format == 'mat':
+                matrix_name = matrix_name.with_suffix('.mat')
                 matrix = scipy.io.loadmat(matrix_name)['rho']
             else:
                 raise ValueError('Wrong format')

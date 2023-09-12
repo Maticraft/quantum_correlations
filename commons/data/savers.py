@@ -7,7 +7,7 @@ import scipy
 from commons.metrics import combinations_num, global_entanglement_bipartitions, global_entanglement
 
 
-DATASETS_DIR_NAME = "datasets"
+DATASETS_DIR_NAME = "datasets_matlab"
 MATRICES_DIR_NAME = "matrices"
 DICTIONARY_NAME = "dictionary.txt"
 NEGATIVITY_BIPART_DICT_NAME = "negativity_bipartitions.txt"
@@ -114,6 +114,7 @@ def _save_data(file_path, ro, filename, dictionary_path, method, entangled_qbits
     if format == 'npy':
         np.save(file_path, ro.data)
     elif format == 'mat':
+        file_path = file_path.with_suffix('.mat')
         scipy.io.savemat(file_path, {'rho': ro.data})
     else:
         raise ValueError('Wrong format: {}'.format(format))
