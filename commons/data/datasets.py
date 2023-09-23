@@ -6,7 +6,7 @@ import torch
 from torch.utils.data import Dataset, Subset
 from qiskit.quantum_info import DensityMatrix
 
-from commons.data.savers import DICTIONARY_NAME, MATRICES_DIR_NAME, DELIMITER
+from commons.data.savers import DICTIONARY_NAME, MATRICES_DIR_NAME
 
 
 class DensityMatricesDataset(Dataset):
@@ -176,7 +176,7 @@ class DensityMatrixLoader:
 def load_dict(filepath):
     with open(filepath, 'r') as dictionary:
         data = dictionary.readlines()
-    parsed_data = [row.rstrip("\n").split(DELIMITER) for row in data]
+    parsed_data = [row.rstrip("\n").split(', ') for row in data]
     return parsed_data
 
 

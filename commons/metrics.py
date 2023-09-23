@@ -5,7 +5,7 @@ from itertools import combinations
 from functools import reduce
 from toqito.state_props.is_separable import is_separable
 from toqito.state_props.is_ppt import is_ppt
-from qiskit.quantum_info import entanglement_of_formation, partial_trace, DensityMatrix, entropy, state_fidelity, concurrence
+from qiskit.quantum_info import entanglement_of_formation, partial_trace, DensityMatrix, entropy, state_fidelity
 
 from commons.data.circuit_ops import expand_matrix, permute_matrix
 
@@ -259,14 +259,9 @@ def negativity_dense(dens_matrix, qargs):
     return -2*np.sum(eigvals)
 
 
-def pure_state_concurrence(dens_matrix, qargs):
+def concurrence(dens_matrix, qargs):
     trace = partial_trace(dens_matrix, qargs)
     return 2*(1 - trace.purity().real)
-
-
-def concurrence_2_qubits(dens_matrix):
-    assert dens_matrix.dim == 4, "Concurrence is defined only for 2-qubit systems"
-    return concurrence(dens_matrix)
 
 
 def _zero_discord_bipart(dens_matrix, qubits, comb):
@@ -328,8 +323,8 @@ def _is_comb_entangled(comb, not_ent_qbits):
 
 
 def _concurrence_bipart(dens_matrix, qubits, comb):
-    conc1 = pure_state_concurrence(dens_matrix, qargs = list(comb))
-    conc2 = pure_state_concurrence(dens_matrix, qargs = [q for q in qubits if q not in list(comb)])
+    conc1 = concurrence(dens_matrix, qargs = list(comb))
+    conc2 = concurrence(dens_matrix, qargs = [q for q in qubits if q not in list(comb)])
     conc = (conc1 + conc2) / 2
     return conc
 
@@ -365,7 +360,6 @@ def global_entanglement_bipartitions(dens_matrix, measure = "von_Neumann", ppt =
     measures = {
         "von_Neumann": _von_Neumann_entropy_bipart,
         "concurrence": _concurrence_bipart,
-        "2_qubits_concurrence": lambda rho, qbits, combination: concurrence_2_qubits(rho), # for 2 qubits only
         "negativity": lambda rho, qbits, combination: _negativity_bipart(rho, ppt, not_ent_qbits, qbits, combination),
         "realignment": _realignment_bipart,
         "discord": _zero_discord_bipart,
