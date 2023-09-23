@@ -7,7 +7,7 @@ import scipy
 from commons.metrics import combinations_num, global_entanglement_bipartitions, global_entanglement
 
 
-DATASETS_DIR_NAME = "datasets"
+DATASETS_DIR_NAME = "datasets_tomography"
 MATRICES_DIR_NAME = "matrices"
 DICTIONARY_NAME = "dictionary.txt"
 NEGATIVITY_BIPART_DICT_NAME = "negativity_bipartitions.txt"
@@ -15,6 +15,7 @@ DISCORD_BIPART_DICT_NAME = "discord_bipartitions.txt"
 NUMERICAL_SEPARABILITY_BIPART_DICT_NAME = "numerical_separability_bipartitions.txt"
 NUM_NEAR_ZERO_EIGVALS_BIPART_DICT_NAME = "num_near_zero_eigvals_bipartitions.txt"
 CONFIDENCE_THRESHOLD = 0.0001
+DELIMITER = ", "
 
 # Save generated density matrix with corresponding metrics to the given destination, depending on the data type
 def save_dens_matrix_with_labels(num_qubits, filename, ro, method, entangled_qbits, save_data_dir = "train", ppt = False, separate_bipart = False, not_ent_qbits = [], zero_neg = 'incl', discord = False, trace_reconstruction = False, num_near_zero_eigvals = None, format = 'npy'):
@@ -76,10 +77,10 @@ def _get_extra_info(ro, trace_reconstruction, discord):
     extra_info = ""
     if trace_reconstruction:
         trace_rec_glob = global_entanglement_bipartitions(ro, "trace_reconstruction")
-        extra_info = ", " + str(trace_rec_glob) + extra_info
+        extra_info =DELIMITER + str(trace_rec_glob) + extra_info
     if discord:
         disc_glob = global_entanglement_bipartitions(ro, "discord")
-        extra_info = ", " + str(disc_glob) + extra_info
+        extra_info =DELIMITER + str(disc_glob) + extra_info
     return extra_info
 
 
@@ -124,15 +125,11 @@ def _save_data(file_path, ro, filename, dictionary_path, method, entangled_qbits
 
 
 def _save_bipart_metrics(bipart_metrics, filename, dict_path):
-    bipart_metrics = ", ".join([str(bipart_metric) for bipart_metric in bipart_metrics])
+    bipart_metrics = DELIMITER.join([str(bipart_metric) for bipart_metric in bipart_metrics])
     with open(dict_path, "a") as dic:
-        dic.write(filename + ", " + bipart_metrics + "\n")
+        dic.write(filename + DELIMITER + bipart_metrics + "\n")
 
 
 def _save_common_metrics(dictionary_path, filename, method, entangled_qbits, ro, extra_info="", ppt=False):
     with open(dictionary_path, "a") as dic:
-        dic.write(filename + ", " + method + ", " + str(entangled_qbits) + ", " + str(global_entanglement(ro)) + 
-        ", " + str(global_entanglement_bipartitions(ro, "von_Neumann")) + ", " + str(global_entanglement_bipartitions(ro, "concurrence")) +
-        ", " + str(global_entanglement_bipartitions(ro, "negativity", ppt)) + ", " + str(global_entanglement_bipartitions(ro, 'realignment')) + 
-        ", " + str(global_entanglement_bipartitions(ro, 'numerical_separability', ppt)) + ", " + str(global_entanglement_bipartitions(ro, 'near_zero_eigvals')) + 
-        extra_info + "\n")
+        dic.write(filename + DELIMITER + str(global_entanglement_bipartitions(ro, "2_qubits_concurrence")) + extra_info + "\n")
