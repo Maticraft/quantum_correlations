@@ -7,7 +7,7 @@ import scipy
 from commons.metrics import combinations_num, global_entanglement_bipartitions, global_entanglement
 
 
-DATASETS_DIR_NAME = "datasets_matlab"
+DATASETS_DIR_NAME = "datasets"
 MATRICES_DIR_NAME = "matrices"
 DICTIONARY_NAME = "dictionary.txt"
 NEGATIVITY_BIPART_DICT_NAME = "negativity_bipartitions.txt"

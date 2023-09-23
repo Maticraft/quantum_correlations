@@ -20,8 +20,8 @@ class Siamese(CNN):
     
 
 class VectorSiamese(CNN):
-    def __init__(self, qbits_num, output_size, conv_num, fc_num, kernel_size, filters_ratio, dilation = 1, ratio_type = None, pooling = None, dropout = False, mode = 'regression', biparts_mode = 'all', upsample_layers = 0, input_channels = 2, stride = 1, activation = 'relu', tensor_layers = False, tensor_map = False, cn_in_block = 1, batch_norm = False):
-        super(VectorSiamese, self).__init__(qbits_num, output_size, conv_num, fc_num, kernel_size, filters_ratio, dilation, ratio_type, pooling, dropout, mode, upsample_layers, input_channels=input_channels, stride=stride, activation=activation, tensor_layers=tensor_layers, tensor_map=tensor_map, cn_in_block= cn_in_block, batch_norm= batch_norm)
+    def __init__(self, qbits_num, output_size, conv_num, fc_num, kernel_size, filters_ratio, dilation = 1, ratio_type = None, pooling = None, dropout = False, mode = 'regression', biparts_mode = 'all', upsample_layers = 0, input_channels = 2, stride = 1, activation = 'relu', cn_in_block = 1, batch_norm = False):
+        super(VectorSiamese, self).__init__(qbits_num, output_size, conv_num, fc_num, kernel_size, filters_ratio, dilation, ratio_type, pooling, dropout, mode, upsample_layers, input_channels=input_channels, stride=stride, activation=activation,cn_in_block= cn_in_block, batch_norm= batch_norm)
         self.perms = list(permutations(range(qbits_num)))
 
         biparts = []

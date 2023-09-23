@@ -73,7 +73,7 @@ def test_separator_as_classifier(model, device, test_loader, criterion, message,
     with torch.no_grad():
         for data, target in test_loader:
             data, target = data.to(device), target.to(device)
-            loss = calculate_separator_loss(model, device, criterion, use_noise, data, target)
+            loss = calculate_separator_loss(model, device, criterion, use_noise, data)
 
             prediction = torch.ones_like(target)
             for ex in range(data.size()[0]):
@@ -109,7 +109,7 @@ def test_separator_as_classifier(model, device, test_loader, criterion, message,
     return test_loss, acc
 
 
-def calculate_separator_loss(model, device, criterion, use_noise, data, target):
+def calculate_separator_loss(model, device, criterion, use_noise, data):
     if use_noise:
         noise_ch = model.input_channels - 2
         noise = torch.randn(data.size()[0], noise_ch, data.size()[2], data.size()[3]).to(device)
@@ -166,7 +166,7 @@ def test_multi_separator_as_classifier(models, device, test_loader, criterion, m
             losses = []
             for model in models:
                 model.eval()
-                loss = calculate_separator_loss(model, device, criterion, use_noise, data, target)
+                loss = calculate_separator_loss(model, device, criterion, use_noise, data)
                 losses.append(loss)
             
             loss = torch.stack(losses, dim=-1)

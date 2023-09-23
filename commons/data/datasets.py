@@ -3,7 +3,7 @@ import os
 import numpy as np
 import scipy
 import torch
-from torch.utils.data import Dataset
+from torch.utils.data import Dataset, Subset
 from qiskit.quantum_info import DensityMatrix
 
 from commons.data.savers import DICTIONARY_NAME, MATRICES_DIR_NAME
@@ -178,3 +178,10 @@ def load_dict(filepath):
         data = dictionary.readlines()
     parsed_data = [row.rstrip("\n").split(', ') for row in data]
     return parsed_data
+
+
+class FilteredSubset(Subset):
+    def __init__(self, dataset, filter_func):
+        indices = [i for i in range(len(dataset)) if filter_func(dataset[i][0])]
+        super().__init__(dataset, indices)
+        self.bipart_num = len(dataset.dictionary[0]) - 1

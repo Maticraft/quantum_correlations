@@ -7,23 +7,25 @@ from commons.data.generation_functions import *
 qbits = 3
 encoded = True
 paper = 'entanglement' # 'entanglement' or 'discord'
-format = 'mat'
+format = 'npy'
 
 if paper == 'entanglement':
     # Generate train sets
-    _ = generate_train_balanced(qbits, encoded, indx = 0, label_ppt = True, save_data_dir = 'train_bisep_weakly_labeled', examples_ratio = 1., max_num_ps = None, zero_neg = 'incl', qubits_glob = 9, biseparable=True, format=format)
+    # _ = generate_train_balanced(qbits, encoded, indx = 0, label_ppt = True, save_data_dir = 'train_bisep_weakly_labeled', examples_ratio = 1., max_num_ps = None, zero_neg = 'incl', qubits_glob = 9, biseparable=True, format=format)
     # _ = generate_train_balanced(qbits, encoded, indx = 0, label_ppt = False, save_data_dir = 'train_bisep_negativity_labeled', examples_ratio = 1., max_num_ps = None, zero_neg = 'incl', qubits_glob = 9, biseparable=True, format=format)
     # _ = generate_train_balanced(qbits, encoded, indx = 0, label_ppt = False, save_data_dir = 'train_bisep_no_pptes_large', examples_ratio = 1., max_num_ps = None, zero_neg = 'none', qubits_glob = 9, biseparable=True, format=format)
+    # _ = generate_train_discordant(qbits, encoded, indx = 0, label_ppt = False, save_data_dir = 'train_bisep_discordant', examples_ratio = 1., zero_neg = 'none', biseparable=True, format=format, discord=True)
     # Generate validation set
-    _ = generate_train_balanced(qbits, encoded, indx = 0, label_ppt = False, save_data_dir = 'val_bisep_no_pptes_nnze_neg', examples_ratio = 0.1, max_num_ps = None, zero_neg = 'none', qubits_glob = 9, biseparable=True, format=format)
+    # _ = generate_train_balanced(qbits, encoded, indx = 0, label_ppt = False, save_data_dir = 'val_bisep_no_pptes_nnze_neg', examples_ratio = 0.1, max_num_ps = None, zero_neg = 'none', qubits_glob = 9, biseparable=True, format=format)
     # _ = generate_train_balanced(qbits, encoded, indx = 0, label_ppt = True, save_data_dir = 'val_bisep_weakly_nnze_neg', examples_ratio = 0.1, max_num_ps = None, zero_neg = 'incl', qubits_glob = 9, biseparable=True, format=format)
+    _ = generate_train_discordant(qbits, encoded, indx = 0, label_ppt = False, save_data_dir = 'val_bisep_discordant', examples_ratio = 0.1, zero_neg = 'none', biseparable=True, format=format, discord=True)
 
     # # Generate test sets
-    _ = generate_pure_test(qbits, encoded, indx = 0, save_data_dir = 'pure_test', format=format)
-    _ = generate_mixed_test_set(qbits, encoded, indx = 0, save_data_dir = 'mixed_test', format=format)
-    _ = generate_acin(qbits, encoded, indx = 0, save_data_dir = 'acin_test', format=format)
-    _ = generate_horodecki(qbits, encoded, indx = 0, save_data_dir = 'horodecki_test', format=format)
-    _ = generate_bennet(qbits, encoded, indx = 0, save_data_dir = 'bennet_test', format=format)
+    # _ = generate_pure_test(qbits, encoded, indx = 0, save_data_dir = 'pure_test', format=format)
+    # _ = generate_mixed_test_set(qbits, encoded, indx = 0, save_data_dir = 'mixed_test', format=format)
+    # _ = generate_acin(qbits, encoded, indx = 0, save_data_dir = 'acin_test', format=format)
+    # _ = generate_horodecki(qbits, encoded, indx = 0, save_data_dir = 'horodecki_test', format=format)
+    # _ = generate_bennet(qbits, encoded, indx = 0, save_data_dir = 'bennet_test', format=format)
     # new_idx = generate_pseudo_acin_pptes(qbits, encoded, indx = 1150000, save_data_dir = 'train_bisep_no_pptes', qubits_glob=9, zero_neg='incl')
     # _ = generate_pseudo_acin_pptes(qbits, encoded, indx = 0, save_data_dir = 'test_pseudo_pptes_acin_max_rank', qubits_glob=9, zero_neg='only', label_potent_ppt=False)
 

@@ -2,7 +2,7 @@ import numpy as np
 import torch
 
 
-def test(model, device, test_loader, criterion, message, confusion_matrix = False, confusion_matrix_dim = None, bipart = False, decision_point = 0.5, balanced_acc = False):
+def test(model, device, test_loader, criterion, message, confusion_matrix = False, confusion_matrix_dim = 2, bipart = False, decision_point = 0.5, balanced_acc = False):
     model.eval()
     model.to(device)
     test_loss = 0.
