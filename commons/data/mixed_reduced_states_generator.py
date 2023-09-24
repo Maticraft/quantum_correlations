@@ -125,7 +125,7 @@ class MixedReducedStatesGenerator():
 
 
     @generate_with_assertion(batch_size=100)
-    def generate_circuit_matrices(self, examples, qubits_num, pure_state_qubits, save_data_dir = None, random_gates = 2, specified_method = None, start_index = 0, encoded = True, label_potent_ppt = False, zero_neg = 'incl', discord = False, fully_entangled = False, with_permutations = False, num_near_zero_eigvals = None, format = 'npy'):
+    def generate_circuit_matrices(self, qubits_num, examples, save_data_dir = None, pure_state_qubits = 9, random_gates = 2, specified_method = None, start_index = 0, encoded = True, label_potent_ppt = False, zero_neg = 'incl', discord = False, fully_entangled = False, with_permutations = False, num_near_zero_eigvals = None, format = 'npy'):
         # possible methods:
         # 0: W state
         # 1: GHZ state

@@ -21,7 +21,7 @@ def generate_with_assertion(batch_size=None):
             try:
                 desired_examples = args[1]
                 if batch_size is not None and desired_examples > batch_size:
-                    args[1] = batch_size
+                    args = (args[0], batch_size, *args[2:])
                     if 'base_size' in kwargs:
                         kwargs['base_size'] = batch_size
             except:
