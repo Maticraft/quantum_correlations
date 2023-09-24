@@ -13,6 +13,7 @@ from commons.train_utils.purificator import train_purificator
 
 def train_vector_siamese(model, device, train_loader, optimizer, criterion, epoch_number, interval, loc_op_flag = False, reduced_perms_num = None, pure_representation = False, biparts = 'separate'):
     model.train()
+    model.to(device)
     train_loss = 0.
 
     if epoch_number <= 10:

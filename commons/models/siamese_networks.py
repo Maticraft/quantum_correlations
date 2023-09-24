@@ -36,13 +36,11 @@ class VectorSiamese(CNN):
         self.matching_indices = self.find_matching_perms(self.perms, self.biparts, biparts_mode)
 
     def forward(self, xs):
-
-        outs = []
-        for x in xs:
-            out = super().forward(x)
-            outs.append(out)
-
-        return torch.stack(outs, dim=0)
+        if type(xs) == list:
+            out = torch.stack([super().forward(x) for x in xs])
+        else:
+            out = super().forward(xs)
+        return out
 
     def find_matching_perms(self, perms, combs, biparts_mode):
         indices = []

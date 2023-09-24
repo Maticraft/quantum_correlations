@@ -78,12 +78,12 @@ for i in range(len(thresholds) - 1):
 
     save_acc(results_path, 'Epoch', ['Train loss', 'Validation loss', 'Validation accuracy', 'Mixed loss', 'Mixed accuracy', 'ACIN loss', 'ACIN accuracy', f'Threshold range: {str(threshold_range)}'], write_mode='w')
 
-    # try:
-    #     train_subset = FilteredSubset(train_dataset, lambda x: separator_filter(x, separator, threshold_range))
-    #     train_loader = DataLoader(train_subset, batch_size=batch_size, shuffle=True)
-    # except:
-    #     save_acc(results_path, 'No train samples in this range', [], write_mode='a')
-    #     continue
+    try:
+        train_subset = FilteredSubset(train_dataset, lambda x: separator_filter(x, separator, threshold_range))
+        train_loader = DataLoader(train_subset, batch_size=batch_size, shuffle=True)
+    except:
+        save_acc(results_path, 'No train samples in this range', [], write_mode='a')
+        continue
 
     try:
         val_subset = FilteredSubset(val_dataset, lambda x: separator_filter(x, separator, threshold_range))
@@ -117,7 +117,7 @@ for i in range(len(thresholds) - 1):
 
     for epoch in range(epoch_num):
         # train_loss = train(model, device, train_loader, optimizer, criterion, epoch, batch_interval)
-        train_loss = train_vector_siamese(model, device, val_loader, optimizer, criterion, epoch, batch_interval, loc_op_flag=True, reduced_perms_num=1)
+        train_loss = train_vector_siamese(model, device, train_loader, optimizer, criterion, epoch, batch_interval, loc_op_flag=True, reduced_perms_num=1)
         if eval_flags['val']:
             # val_loss, val_acc = test(model, device, val_loader, criterion, "Validation data set", bipart=True)
             val_loss, val_acc = test_vector_siamese(model, device, val_loader, criterion, "Validation data set", bipart='separate', negativity_ext=False, low_thresh=0.5, high_thresh=0.5, decision_point=0.5, balanced_acc=False)

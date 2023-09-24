@@ -12,12 +12,13 @@ from commons.models.cnns import CNN
 
 from commons.models.separator_classifiers import FancySeparatorEnsembleClassifier
 from commons.models.separator_classifiers import FancyClassifier
+from commons.models.siamese_networks import VectorSiamese
 from commons.models.separators import FancySeparator
 from commons.test_utils.multi_classifier import test_multi_classifier
 from commons.pytorch_utils import save_acc
 
-train_dictionary_path = './datasets/3qbits/train_bisep_negativity_labeled/negativity_bipartitions.txt'
-train_root_dir = './datasets/3qbits/train_bisep_negativity_labeled/matrices/'
+train_dictionary_path = './datasets/3qbits/train_bisep_no_pptes/negativity_bipartitions.txt'
+train_root_dir = './datasets/3qbits/train_bisep_no_pptes/matrices/'
 
 val_dictionary_path = './datasets/3qbits/val_bisep_no_pptes/negativity_bipartitions.txt'
 val_root_dir = './datasets/3qbits/val_bisep_no_pptes/matrices/'
@@ -42,11 +43,11 @@ biseparable_root_dir = './datasets/3qbits/biseparable_test/matrices/'
 
 separator_path = './models/3qbits/FancySeparator_l1_all_sep_o48_fc4_bl.pt'
 
-model_dir = './models/3qbits/multi_class/negativity_bisep/'
-model_name = 'cnn_class_{}'
+model_dir = './models/3qbits/multi_class/nopptes_bisep/'
+model_name = 'siam_cnn_class_{}'
 
-results_dir = './results/3qbits/multi_class/negativity_bisep/'
-results_file = 'cnn_class.txt'
+results_dir = './results/3qbits/multi_class/nopptes_bisep/'
+results_file = 'siam_class.txt'
 
 thresholds = [0., 5.e-4, 1.e-3, 2.e-3, 5.e-3, 1.e-2, 2.e-2, 5.e-2]
 # thresholds = np.geomspace(0.0001, 0.1, 15)
@@ -98,9 +99,10 @@ results_path = results_dir + results_file
 
 models = []
 for model_path in model_paths:
-    model = FancySeparatorEnsembleClassifier(qbits_num, sep_ch, sep_fc_num, train_dataset.bipart_num, 3)
-    model = FancyClassifier(qbits_num, sep_ch, sep_fc_num, 5, train_dataset.bipart_num, 128)
-    model = CNN(qbits_num, train_dataset.bipart_num, 3, 5, 2, 16, ratio_type='sqrt', mode='classifier')
+    # model = FancySeparatorEnsembleClassifier(qbits_num, sep_ch, sep_fc_num, train_dataset.bipart_num, 3)
+    # model = FancyClassifier(qbits_num, sep_ch, sep_fc_num, 5, train_dataset.bipart_num, 128)
+    # model = CNN(qbits_num, train_dataset.bipart_num, 3, 5, 2, 16, ratio_type='sqrt', mode='classifier')
+    model = VectorSiamese(qbits_num, train_dataset.bipart_num, 3, 5, 2, 16, ratio_type='sqrt', mode='classifier', biparts_mode='all')
     model.double()
     model.load_state_dict(torch.load(model_path))
     models.append(model)

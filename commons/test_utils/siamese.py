@@ -10,6 +10,7 @@ from math import factorial
 
 def test_vector_siamese(model, device, test_loader, criterion, message, confusion_matrix = False, confusion_matrix_dim = None, bipart = 'averaged', negativity_ext = False, low_thresh = 0.5, high_thresh = 0.5, decision_point = 0.5, balanced_acc = False, permute = False):
     model.eval()
+    model.to(device)
     test_loss = 0.
     correct = 0
     if bipart == 'separate':
@@ -52,7 +53,6 @@ def test_vector_siamese(model, device, test_loader, criterion, message, confusio
                 correct += (prediction.eq(target)).sum(dim=0).cpu().numpy()
 
                 for i in range(test_loader.dataset.bipart_num):
-
                     correct_lh[i] += (prediction[:,i][output[0][:,i] < low_thresh].eq(target[:,i][output[0][:,i] < low_thresh])).sum().cpu().numpy()
                     correct_lh[i] += (prediction[:,i][output[0][:,i] > high_thresh].eq(target[:,i][output[0][:,i] > high_thresh])).sum().cpu().numpy()
                     num_lh[i] +=  (prediction[:,i][output[0][:,i] > high_thresh]).shape[0] + (prediction[:,i][output[0][:,i] < low_thresh]).shape[0]
@@ -125,6 +125,7 @@ def test_vector_siamese(model, device, test_loader, criterion, message, confusio
 
 def test_siamese(model, device, test_loader, criterion, message, confusion_matrix=False, confusion_matrix_dim=None):
     model.eval()
+    model.to(device)
     test_loss = 0.
     correct = 0
 
