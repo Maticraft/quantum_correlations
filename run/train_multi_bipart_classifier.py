@@ -21,8 +21,8 @@ import torch
 from torch.utils.data import DataLoader
 
 
-train_dictionary_path = './datasets/3qbits/train_bisep_no_pptes/negativity_bipartitions.txt'
-train_root_dir = './datasets/3qbits/train_bisep_no_pptes/matrices/'
+train_dictionary_path = './datasets/3qbits/train_bisep_negativity_labeled/negativity_bipartitions.txt'
+train_root_dir = './datasets/3qbits/train_bisep_negativity_labeled/matrices/'
 
 separator_path = './models/3qbits/FancySeparator_l1_all_sep_o48_fc4_bl.pt'
 
@@ -35,8 +35,8 @@ mixed_root_dir = './datasets/3qbits/mixed_test/matrices/'
 acin_dictionary_path = './datasets/3qbits/acin_test/negativity_bipartitions.txt'
 acin_root_dir = './datasets/3qbits/acin_test/matrices/'
 
-results_dir = './results/3qbits/multi_class/nopptes_bisep/'
-model_dir = './models/3qbits/multi_class/nopptes_bisep/'
+results_dir = './results/3qbits/multi_class/negativity_bisep/'
+model_dir = './models/3qbits/multi_class/negativity_bisep/'
 model_name = 'siam_cnn_class_{}'
 
 thresholds = [0., 5.e-4, 1.e-3, 2.e-3, 5.e-3, 1.e-2, 2.e-2, 5.e-2]
