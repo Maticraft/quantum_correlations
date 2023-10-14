@@ -270,15 +270,3 @@ def rho_reconstruction(x, separator_output):
     rho = rho / ch
     rho = torch.stack((rho.real, rho.imag), dim = 1)
     return rho
-
-
-def separator_filter(x, separator, thresholds_range, criterion = nn.L1Loss(reduction='mean')):
-    if x.shape[0] != 1:
-        x = x.unsqueeze(0)
-    separator.to(x.device)
-    separator_output = separator(x)
-    rho = rho_reconstruction(x, separator_output)
-    loss = criterion(rho, x).item()
-    if thresholds_range[0] < loss < thresholds_range[1]:
-        return True
-    return False

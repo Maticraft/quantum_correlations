@@ -1,13 +1,13 @@
 import sys
 sys.path.append('./')
 
-from commons.data.datasets import BipartitionMatricesDataset, FilteredSubset
+from commons.data.filters import separator_filter
+from commons.data.datasets import BipartitionMatricesDataset, DataFilteredSubset
 from commons.models.cnns import CNN
-
 from commons.models.separator_classifiers import FancySeparatorEnsembleClassifier
 from commons.models.separator_classifiers import FancyClassifier
 from commons.models.siamese_networks import VectorSiamese
-from commons.models.separators import FancySeparator, separator_filter
+from commons.models.separators import FancySeparator
 from commons.test_utils.base import test
 from commons.test_utils.siamese import test_vector_siamese
 from commons.train_utils.base import train
@@ -91,38 +91,38 @@ for i in range(len(thresholds) - 1):
     save_acc(results_path, 'Epoch', ['Train loss', 'Validation loss', 'Validation accuracy', 'Mixed loss', 'Mixed accuracy', 'ACIN loss', 'ACIN accuracy', 'Horodecki loss', 'Horodecki accuracy',  'Bennet loss', 'Bennet accuracy', f'Threshold range: {str(threshold_range)}'], write_mode='w')
 
     try:
-        train_subset = FilteredSubset(train_dataset, lambda x: separator_filter(x, separator, threshold_range))
+        train_subset = DataFilteredSubset(train_dataset, lambda x: separator_filter(x, separator, threshold_range))
         train_loader = DataLoader(train_subset, batch_size=batch_size, shuffle=True)
     except:
         save_acc(results_path, 'No train samples in this range', [], write_mode='a')
         continue
 
     try:
-        val_subset = FilteredSubset(val_dataset, lambda x: separator_filter(x, separator, threshold_range))
+        val_subset = DataFilteredSubset(val_dataset, lambda x: separator_filter(x, separator, threshold_range))
         val_loader = DataLoader(val_subset, batch_size=batch_size, shuffle=True)
     except:
         eval_flags['val'] = False
 
     try:
-        test_mixed_subset = FilteredSubset(test_mixed_dataset, lambda x: separator_filter(x, separator, threshold_range))
+        test_mixed_subset = DataFilteredSubset(test_mixed_dataset, lambda x: separator_filter(x, separator, threshold_range))
         test_mixed_loader = DataLoader(test_mixed_subset, batch_size=batch_size, shuffle=True)
     except:
         eval_flags['mixed'] = False
 
     try:
-        test_acin_subset = FilteredSubset(test_acin_dataset, lambda x: separator_filter(x, separator, threshold_range))
+        test_acin_subset = DataFilteredSubset(test_acin_dataset, lambda x: separator_filter(x, separator, threshold_range))
         test_acin_loader = DataLoader(test_acin_subset, batch_size=batch_size, shuffle=True)
     except:
         eval_flags['acin'] = False
 
     try:
-        test_horodecki_subset = FilteredSubset(test_horodecki_dataset, lambda x: separator_filter(x, separator, threshold_range))
+        test_horodecki_subset = DataFilteredSubset(test_horodecki_dataset, lambda x: separator_filter(x, separator, threshold_range))
         test_horodecki_loader = DataLoader(test_horodecki_subset, batch_size=batch_size, shuffle=True)
     except:
         eval_flags['horodecki'] = False
 
     try:
-        test_bennet_subset = FilteredSubset(test_bennet_dataset, lambda x: separator_filter(x, separator, threshold_range))
+        test_bennet_subset = DataFilteredSubset(test_bennet_dataset, lambda x: separator_filter(x, separator, threshold_range))
         test_bennet_loader = DataLoader(test_bennet_subset, batch_size=batch_size, shuffle=True)
     except:
         eval_flags['bennet'] = False

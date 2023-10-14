@@ -189,8 +189,22 @@ def load_dict(filepath, delimiter = ', '):
     return parsed_data
 
 
-class FilteredSubset(Subset):
+class DataFilteredSubset(Subset):
     def __init__(self, dataset, filter_func):
         indices = [i for i in range(len(dataset)) if filter_func(dataset[i][0])]
+        super().__init__(dataset, indices)
+        self.bipart_num = len(dataset.dictionary[0]) - 1
+
+
+class TargetFilteredSubset(Subset):
+    def __init__(self, dataset, filter_func):
+        indices = [i for i in range(len(dataset)) if filter_func(dataset[i][1])]
+        super().__init__(dataset, indices)
+        self.bipart_num = len(dataset.dictionary[0]) - 1
+
+
+class FilteredSubset(Subset):
+    def __init__(self, dataset, filter_func):
+        indices = [i for i in range(len(dataset)) if filter_func(dataset[i])]
         super().__init__(dataset, indices)
         self.bipart_num = len(dataset.dictionary[0]) - 1

@@ -40,14 +40,14 @@ biseparable_root_dir = './datasets/3qbits/biseparable_test/matrices/'
 
 separator_path = './models/3qbits/FancySeparator_l1_all_sep_o48_fc4_bl.pt'
 
-model_dir = './models/3qbits/multi_class_3/nopptes_bisep/'
+model_dir = './models/3qbits/multi_class_2/nopptes_bisep/'
 model_name = 'cnn_class_{}'
 
-results_dir = './results/3qbits/multi_class_3/nopptes_bisep/'
+results_dir = './results/3qbits/multi_class_2/nopptes_bisep/'
 results_file = 'cnn_class.txt'
 
 # thresholds = [0., 5.e-4, 1.e-3, 2.e-3, 5.e-3, 1.e-2, 2.e-2, 5.e-2]
-thresholds = [0., 1.e-3, 1.e-2, 1.e-1]
+thresholds = [0., 1.e-3, 1.e-1]
 # thresholds = np.geomspace(0.0001, 0.1, 15)
 # thresholds = np.insert(thresholds, 0, 0.)
 
@@ -103,7 +103,7 @@ for model_path in model_paths:
     models.append(model)
 print('Models loaded')
 
-save_acc(results_path, '', ['Train loss', 'Train_acc', 'Validation loss', 'Validation accuracy', 'Mixed loss', 'Mixed accuracy', 'ACIN loss', 'ACIN accuracy', 'Horodecki loss', 'Horodecki accuracy',  'Bennet loss', 'Bennet accuracy', 'Bisep loss', 'Bisep accuracy'], write_mode='w')
+save_acc(results_path, '', ['Train loss', 'Train_acc', 'Validation loss', 'Validation accuracy', 'Mixed loss', 'Mixed accuracy', 'ACIN loss', 'ACIN accuracy', 'Horodecki loss', 'Horodecki accuracy', 'Bennet loss', 'Bennet accuracy', 'Bisep loss', 'Bisep accuracy'], write_mode='w')
 
 train_loss, train_acc = test_multi_classifier(models, separator, thresholds, device, train_loader, criterion, "Train data set", bipart=True)
 val_loss, val_acc = test_multi_classifier(models, separator, thresholds, device, val_loader, criterion, "Validation data set", bipart=True)

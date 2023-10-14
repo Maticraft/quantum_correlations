@@ -1,12 +1,14 @@
 import sys
+
+from commons.data.filters import separator_filter
 sys.path.append('./')
 
-from commons.data.datasets import BipartitionMatricesDataset, FilteredSubset
+from commons.data.datasets import BipartitionMatricesDataset, DataFilteredSubset
 from commons.models.cnns import CNN
 
 from commons.models.separator_classifiers import FancySeparatorEnsembleClassifier
 from commons.models.separator_classifiers import FancyClassifier
-from commons.models.separators import FancySeparator, separator_filter
+from commons.models.separators import FancySeparator
 from commons.test_utils.base import test
 from commons.train_utils.base import train
 from commons.pytorch_utils import save_acc
@@ -67,19 +69,19 @@ save_acc(results_path, '', ['Validation loss', 'Validation accuracy', 'Mixed los
 eval_flags = {'val': True, 'mixed': True, 'acin': True}
 
 try:
-    val_subset = FilteredSubset(val_dataset, lambda x: separator_filter(x, separator, threshold_range))
+    val_subset = DataFilteredSubset(val_dataset, lambda x: separator_filter(x, separator, threshold_range))
     val_loader = DataLoader(val_subset, batch_size=batch_size, shuffle=True)
 except:
     eval_flags['val'] = False
 
 try:
-    test_mixed_subset = FilteredSubset(test_mixed_dataset, lambda x: separator_filter(x, separator, threshold_range))
+    test_mixed_subset = DataFilteredSubset(test_mixed_dataset, lambda x: separator_filter(x, separator, threshold_range))
     test_mixed_loader = DataLoader(test_mixed_subset, batch_size=batch_size, shuffle=True)
 except:
     eval_flags['mixed'] = False
 
 try:
-    test_acin_subset = FilteredSubset(test_acin_dataset, lambda x: separator_filter(x, separator, threshold_range))
+    test_acin_subset = DataFilteredSubset(test_acin_dataset, lambda x: separator_filter(x, separator, threshold_range))
     test_acin_loader = DataLoader(test_acin_subset, batch_size=batch_size, shuffle=True)
 except:
     eval_flags['acin'] = False
