@@ -1,4 +1,4 @@
-def train(model, device, train_loader, optimizer, criterion, epoch_number, interval):
+def train(model, device, train_loader, optimizer, criterion, epoch_number, interval, target_to_filter = None):
     model.train()
     model.to(device)
     train_loss = 0.
@@ -8,7 +8,7 @@ def train(model, device, train_loader, optimizer, criterion, epoch_number, inter
         data, target = data.to(device), target.to(device)
         optimizer.zero_grad()
         output = model(data)
-        loss = criterion(output, target)
+        loss = criterion(output[target != target_to_filter], target[target != target_to_filter])
         loss.backward()
         optimizer.step()
 
