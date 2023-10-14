@@ -16,8 +16,8 @@ from torch.utils.data import DataLoader
 
 from commons.pytorch_utils import save_acc
 
-train_dictionary_path = './datasets/3qbits/train_bisep_discordant/negativity_bipartitions.txt'
-train_root_dir = './datasets/3qbits/train_bisep_discordant/matrices/'
+train_dictionary_path = './datasets/3qbits/train_pure/negativity_bipartitions.txt'
+train_root_dir = './datasets/3qbits/train_pure/matrices/'
 
 val_dictionary_path = './datasets/3qbits/val_bisep_discordant/negativity_bipartitions.txt'
 val_root_dir = './datasets/3qbits/val_bisep_discordant/matrices/'
@@ -28,8 +28,8 @@ mixed_root_dir = './datasets/3qbits/mixed_test/matrices/'
 acin_dictionary_path = './datasets/3qbits/acin_test/negativity_bipartitions.txt'
 acin_root_dir = './datasets/3qbits/acin_test/matrices/'
 
-results_dir = './results/3qbits/nopptes_bisep_discordant/'
-model_dir = './models/3qbits/nopptes_bisep_discordant/'
+results_dir = './results/3qbits/pure/'
+model_dir = './models/3qbits/pure/'
 model_name = 'cnn_class'
 
 batch_size = 128
@@ -40,7 +40,7 @@ sep_fc_num = 4
 epoch_num = 20
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-train_dataset = BipartitionMatricesDataset(train_dictionary_path, train_root_dir, 0.0001)
+train_dataset = BipartitionMatricesDataset(train_dictionary_path, train_root_dir, 0.0001, format='npy', filename_pos=0)
 train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 
 val_dataset = BipartitionMatricesDataset(val_dictionary_path, val_root_dir, 0.0001)
@@ -68,7 +68,7 @@ results_path = results_dir + model_name + '.txt'
 save_acc(results_path, 'Epoch', ['Train loss', 'Validation loss', 'Validation accuracy', 'Mixed loss', 'Mixed accuracy', 'ACIN loss', 'ACIN accuracy'], write_mode='w')
 
 for epoch in range(epoch_num):
-    train_loss = train(model, device, train_loader, optimizer, criterion, epoch, batch_interval)
+    train_loss = train(model, device, train_loader, optimizer, criterion, epoch, batch_interval, target_to_filter=-1)
     val_loss, val_acc = test(model, device, val_loader, criterion, "Validation data set", bipart=True)
     mixed_loss, mixed_acc = test(model, device, test_mixed_loader, criterion, "Mixed data set", bipart=True)
     acin_loss, acin_acc = test(model, device, test_acin_loader, criterion, "ACIN data set", bipart=True)    
