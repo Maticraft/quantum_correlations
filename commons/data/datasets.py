@@ -11,8 +11,8 @@ from commons.data.savers import DICTIONARY_NAME, MATRICES_DIR_NAME
 
 class DensityMatricesDataset(Dataset):
 
-    def __init__(self, dictionary, root_dir, metrics, threshold, data_limit = None, format = "npy"):
-        self.dictionary = load_dict(dictionary)
+    def __init__(self, dictionary, root_dir, metrics, threshold, data_limit = None, format = "npy", delimiter = ', '):
+        self.dictionary = load_dict(dictionary, delimiter)
         self.root_dir = root_dir
         self.metrics = metrics
         self.threshold = threshold
@@ -64,7 +64,6 @@ class DensityMatricesDataset(Dataset):
         if self.format == "npy":
             matrix = np.load(matrix_name)
         elif self.format == 'mat':
-            matrix_name = matrix_name.with_suffix('.mat')
             matrix = scipy.io.loadmat(matrix_name)['rho']
         else:
             raise ValueError('Wrong format')
@@ -86,14 +85,14 @@ class DensityMatricesDataset(Dataset):
 
 class BipartitionMatricesDataset(Dataset):
 
-    def __init__(self, dictionary, root_dir, threshold, data_limit = None, format = "npy"):
-        self.dictionary = load_dict(dictionary)[:data_limit]
+    def __init__(self, dictionary, root_dir, threshold, data_limit = None, format = "npy", filename_pos = 0, delimiter = ', '):
+        self.dictionary = load_dict(dictionary, delimiter)[:data_limit]
         self.root_dir = root_dir
         self.data_limit = data_limit
-        self.bipart_num = len(self.dictionary[0]) - 1
+        self.bipart_num = len(self.dictionary[0]) - 1 - filename_pos
         self.threshold = threshold
         self.format = format
-
+        self.filename_pos = filename_pos
 
     def __len__(self):
         if self.data_limit != None:
@@ -101,17 +100,15 @@ class BipartitionMatricesDataset(Dataset):
         else:
             return len(self.dictionary)
 
-
     def __getitem__(self, idx):
         if torch.is_tensor(idx):
             idx = idx.tolist()
 
-        filename = f"{self.dictionary[idx][0]}.{self.format}"
+        filename = self.read_filename(idx)
         matrix_name = os.path.join(self.root_dir, filename)
         if self.format == "npy":
             matrix = np.load(matrix_name)
         elif self.format == 'mat':
-            matrix_name = matrix_name.with_suffix('.mat')
             matrix = scipy.io.loadmat(matrix_name)['rho']
         else:
             raise ValueError('Wrong format')
@@ -121,15 +118,27 @@ class BipartitionMatricesDataset(Dataset):
 
         tensor = torch.from_numpy(np.stack((matrix_r, matrix_im), axis=0))
 
-        label = torch.tensor([1. if float(self.dictionary[idx][i]) > self.threshold else 0. for i in range(1, len(self.dictionary[0]))]).double()
+        label = [1. if float(self.dictionary[idx][i]) > self.threshold else 0. for i in range(self.filename_pos + 1, len(self.dictionary[0]))]
+        if self.format == 'mat':
+            label = self.revert_labels(label)
+        label = torch.tensor(label).double()
 
         return (tensor, label)
+    
+    def read_filename(self, idx):
+        filename = f"{self.dictionary[idx][self.filename_pos]}.{self.format}"
+        if not filename.startswith('dens'):
+            filename = 'dens' + filename
+        return filename
 
+    def revert_labels(self, labels):
+        return [1. if label == 0 else 0. for label in labels]
+    
 
 class DensityMatrixLoader:
-    def __init__(self, path, label_idx = 6, threshold = 0.0001, format = "npy"):
+    def __init__(self, path, label_idx = 6, threshold = 0.0001, format = "npy", delimiter = ', '):
         self.path = path
-        self.dictionary = load_dict(os.path.join(path, DICTIONARY_NAME))
+        self.dictionary = load_dict(os.path.join(path, DICTIONARY_NAME), delimiter)
         self.matrices_dir = os.path.join(path, MATRICES_DIR_NAME)
         self.label_pos = label_idx
         self.threshold = threshold
@@ -173,10 +182,10 @@ class DensityMatrixLoader:
             current_index += 1
 
 
-def load_dict(filepath):
+def load_dict(filepath, delimiter = ', '):
     with open(filepath, 'r') as dictionary:
         data = dictionary.readlines()
-    parsed_data = [row.rstrip("\n").split(', ') for row in data]
+    parsed_data = [row.lstrip('\t').rstrip("\n").split(delimiter) for row in data]
     return parsed_data
 
 
