@@ -11,7 +11,7 @@ from math import factorial, log2
 from commons.train_utils.purificator import train_purificator
 
 
-def train_vector_siamese(model, device, train_loader, optimizer, criterion, epoch_number, interval, loc_op_flag = False, reduced_perms_num = None, pure_representation = False, biparts = 'separate'):
+def train_vector_siamese(model, device, train_loader, optimizer, criterion, epoch_number, interval, loc_op_flag = False, reduced_perms_num = None, pure_representation = False, biparts = 'separate', target_to_filter = None):
     model.train()
     model.to(device)
     train_loss = 0.
@@ -40,9 +40,10 @@ def train_vector_siamese(model, device, train_loader, optimizer, criterion, epoc
 
         if loc_op_flag:
             loc_op_data = loc_op_circ(data).double().to(device)
-            outputs = model(torch.cat((perm_data, torch.unsqueeze(loc_op_data, dim=0)), dim=0))
-        else:
-            outputs = model(perm_data)
+            perm_data = torch.cat((perm_data, torch.unsqueeze(loc_op_data, dim=0)), dim=0)
+
+        data_tensor_list = [tensor for tensor in perm_data]
+        outputs = model(data_tensor_list)
 
         target = target.to(device)
 
@@ -50,7 +51,7 @@ def train_vector_siamese(model, device, train_loader, optimizer, criterion, epoc
 
         # separate outputs for different bipartitions
         if biparts == 'separate':
-            loss_std = criterion(outputs[0], target)
+            loss_std = criterion(outputs[0][target != target_to_filter], target[target != target_to_filter])
 
             for (i1, j1), (i2, j2) in model.matching_indices:
                 if reduced_perms_num != None:
@@ -60,7 +61,7 @@ def train_vector_siamese(model, device, train_loader, optimizer, criterion, epoc
                     losses_perm.append(torch.mean(torch.abs(outputs[j1,:,i1] - outputs[j2,:,i2])))
 
         elif biparts == 'averaged': # single output averaged bipartitions
-            loss_std = criterion(outputs[0], target)
+            loss_std = criterion(outputs[0][target != target_to_filter], target[target != target_to_filter])
 
             for j1 in range(len(outputs)):
                 for j2 in range((len(outputs))):
@@ -71,7 +72,7 @@ def train_vector_siamese(model, device, train_loader, optimizer, criterion, epoc
                         losses_perm.append(torch.mean(torch.abs(outputs[j1] - outputs[j2])))
 
         elif biparts == 'single':
-            loss_std = criterion(outputs[0], torch.unsqueeze(target[:,0], dim=1))
+            loss_std = criterion(outputs[0][target != target_to_filter], torch.unsqueeze(target[:,0][target != target_to_filter], dim=1))
             for (i1, j1), (i2, j2) in model.matching_indices:
                 if i1 == i2 and i1 == 0:
                     if reduced_perms_num != None:

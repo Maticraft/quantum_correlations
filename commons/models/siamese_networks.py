@@ -37,9 +37,9 @@ class VectorSiamese(CNN):
 
     def forward(self, xs):
         if type(xs) == list:
-            out = torch.stack([super().forward(x) for x in xs])
+            out = torch.stack([super(VectorSiamese, self).forward(x) for x in xs])
         else:
-            out = super().forward(xs)
+            out = super(VectorSiamese, self).forward(xs)
         return out
 
     def find_matching_perms(self, perms, combs, biparts_mode):

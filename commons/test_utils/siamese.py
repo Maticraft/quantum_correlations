@@ -35,16 +35,16 @@ def test_vector_siamese(model, device, test_loader, criterion, message, confusio
 
             if bipart == 'single':
                 ind = np.random.randint(0, len(model.perms))
-                data = all_perms(data, ind).double().to(device)
+                data = all_perms(data, ind).double().to(device)[0]
                 ind = ind // factorial(int(round(np.log2(model.dim))) - 1)
                 output = model(data)
-                test_loss += criterion(output[0], torch.unsqueeze(target[:, ind], dim=1)).item()
+                test_loss += criterion(output, torch.unsqueeze(target[:, ind], dim=1)).item()
             else:
-                output = model([data])
-                test_loss += criterion(output[0], target).item()
+                output = model(data)
+                test_loss += criterion(output, target).item()
 
-            prediction = torch.zeros_like(output[0])
-            prediction[output[0] > decision_point] = 1
+            prediction = torch.zeros_like(output)
+            prediction[output > decision_point] = 1
 
             if negativity_ext:
                 prediction[target == 1] = 1
@@ -53,25 +53,25 @@ def test_vector_siamese(model, device, test_loader, criterion, message, confusio
                 correct += (prediction.eq(target)).sum(dim=0).cpu().numpy()
 
                 for i in range(test_loader.dataset.bipart_num):
-                    correct_lh[i] += (prediction[:,i][output[0][:,i] < low_thresh].eq(target[:,i][output[0][:,i] < low_thresh])).sum().cpu().numpy()
-                    correct_lh[i] += (prediction[:,i][output[0][:,i] > high_thresh].eq(target[:,i][output[0][:,i] > high_thresh])).sum().cpu().numpy()
-                    num_lh[i] +=  (prediction[:,i][output[0][:,i] > high_thresh]).shape[0] + (prediction[:,i][output[0][:,i] < low_thresh]).shape[0]
+                    correct_lh[i] += (prediction[:,i][output[:,i] < low_thresh].eq(target[:,i][output[:,i] < low_thresh])).sum().cpu().numpy()
+                    correct_lh[i] += (prediction[:,i][output[:,i] > high_thresh].eq(target[:,i][output[:,i] > high_thresh])).sum().cpu().numpy()
+                    num_lh[i] +=  (prediction[:,i][output[:,i] > high_thresh]).shape[0] + (prediction[:,i][output[:,i] < low_thresh]).shape[0]
 
             elif bipart == 'averaged':
                 correct += prediction.eq(target).sum().item()
 
-                correct_lh += prediction[output[0] < low_thresh].eq(target[output[0] < low_thresh]).sum().item()
-                correct_lh += prediction[output[0] > high_thresh].eq(target[output[0] > high_thresh]).sum().item()
+                correct_lh += prediction[output < low_thresh].eq(target[output < low_thresh]).sum().item()
+                correct_lh += prediction[output > high_thresh].eq(target[output > high_thresh]).sum().item()
 
-                num_lh += len(output[0] < low_thresh) + len(output[0] > high_thresh)
+                num_lh += len(output < low_thresh) + len(output > high_thresh)
 
             elif bipart == 'single':
                 correct += prediction.eq(torch.unsqueeze(target[:, ind], dim=1)).sum().item()
 
-                correct_lh += prediction[output[0] < low_thresh].eq(torch.unsqueeze(target[output[0] < low_thresh][:, ind], dim=1)).sum().item()
-                correct_lh += prediction[output[0] > high_thresh].eq(torch.unsqueeze(target[output[0] > high_thresh][:, ind], dim=1)).sum().item()
+                correct_lh += prediction[output < low_thresh].eq(torch.unsqueeze(target[output < low_thresh][:, ind], dim=1)).sum().item()
+                correct_lh += prediction[output > high_thresh].eq(torch.unsqueeze(target[output > high_thresh][:, ind], dim=1)).sum().item()
 
-                num_lh += len(output[0] < low_thresh) + len(output[0] > high_thresh)
+                num_lh += len(output < low_thresh) + len(output > high_thresh)
 
             if confusion_matrix or balanced_acc:
                 if bipart == 'separate':
