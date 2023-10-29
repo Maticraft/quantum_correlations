@@ -40,16 +40,19 @@ biseparable_root_dir = './datasets/3qbits/biseparable_test/matrices/'
 
 separator_path = './models/3qbits/FancySeparator_l1_all_sep_o48_fc4_bl.pt'
 
-model_dir = './models/3qbits/multi_class_2/nopptes_bisep/'
-model_name = 'cnn_class_{}'
+model_dir = './models/3qbits/multi_class_siam_20/nopptes_bisep/'
+model_name = 'weights05_ep10_class_best_val_loss_{}'
 
-results_dir = './results/3qbits/multi_class_2/nopptes_bisep/'
-results_file = 'cnn_class.txt'
+results_dir = './results/3qbits/multi_class_siam_20/nopptes_bisep/'
+results_file = 'weights05_ep10_class_best_val_loss.txt'
 
 # thresholds = [0., 5.e-4, 1.e-3, 2.e-3, 5.e-3, 1.e-2, 2.e-2, 5.e-2]
-thresholds = [0., 1.e-3, 1.e-1]
+# thresholds = [0., 1.e-3, 1.e-1]
 # thresholds = np.geomspace(0.0001, 0.1, 15)
 # thresholds = np.insert(thresholds, 0, 0.)
+thresholds = np.geomspace(0.001, 0.1, 20)
+thresholds = np.insert(thresholds, 0, 0.)
+thresholds = np.delete(thresholds, len(thresholds) - 1)
 
 batch_size = 128
 batch_interval = 800

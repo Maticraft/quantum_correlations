@@ -45,7 +45,7 @@ datasets = [
 ]
 
 results_dir = './results/3qbits/multi_class/'
-save_file_name = 'distrib_dens_log.png'
+save_file_name = 'full_distrib_dens_log.png'
 
 logscale = True
 
@@ -78,7 +78,12 @@ def get_distribution(dataset_info, subset_size = 10000, class_id = 0):
     x = x.to(device)
     separator_output = separator(x)
     rho = rho_reconstruction(x, separator_output)
-    mask = torch.all(labels == class_id, dim=1)
+    if type(class_id) == int:
+        mask = torch.all(labels == class_id, dim=1)
+    elif type(class_id) == list and len(class_id) == 2:
+        mask = torch.logical_and(*[torch.any(labels == id, dim = 1) for id in class_id])
+    else:
+        raise ValueError('class_id must be either int or list of two ints')
     loss = criterion(rho[mask], x[mask]).view(-1, torch.prod(torch.tensor(rho.shape[1:]))).mean(1)
     return loss.detach().cpu().numpy()
 
@@ -99,6 +104,7 @@ if logscale:
 for dataset_info in datasets:
     distribution_0 = get_distribution(dataset_info, class_id=0)
     distribution_1 = get_distribution(dataset_info, class_id=1)
+    distribution_01 = get_distribution(dataset_info, class_id=[0, 1])
 
     # plot histogram if the distributions are not empty
     if len(distribution_0) > 0:
@@ -106,6 +112,9 @@ for dataset_info in datasets:
 
     if len(distribution_1) > 0:
         plot_distribution(dataset_info, distribution_1, states_type='entangled')
+
+    if len(distribution_01) > 0:
+        plot_distribution(dataset_info, distribution_01, states_type='biseparable')
     
 plt.legend()
 plt.xlabel('L1 loss')

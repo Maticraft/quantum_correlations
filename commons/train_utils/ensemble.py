@@ -1,10 +1,13 @@
 import torch
 
-def train_ensemble(model, device, train_loader, optimizer, criterion, epoch_number, interval):
+def train_ensemble(model, device, train_loader, optimizer, epoch_number, interval):
     model.to(device)
     model.train()
 
     train_loss = 0.
+
+    bce_loss = torch.nn.BCELoss(reduction='none')
+    cross_entropy_loss = torch.nn.CrossEntropyLoss()
 
     for batch_idx, (data, target) in enumerate(train_loader):
 
@@ -13,8 +16,15 @@ def train_ensemble(model, device, train_loader, optimizer, criterion, epoch_numb
 
         outputs, weights = model(data, return_all=True)
         target = target.unsqueeze(1).expand_as(outputs)
-        ensemble_loss = criterion(outputs, target)
-        loss = torch.mean(ensemble_loss * weights.unsqueeze(-1))
+        ensemble_loss = bce_loss(outputs, target)
+        best_submodels_ids = torch.argmin(ensemble_loss.mean(-1), dim=-1, keepdim=True)
+        weights_target = torch.zeros_like(weights)
+        weights_target.scatter_(1, best_submodels_ids, 1)
+        weights_loss = cross_entropy_loss(weights, weights_target)
+        # loss = torch.mean(ensemble_loss * weights.unsqueeze(-1)) + weights_loss
+        ensemble_loss = torch.gather(ensemble_loss, 1, best_submodels_ids.unsqueeze(-1).expand(-1, -1, ensemble_loss.shape[-1]))
+
+        loss = torch.mean(ensemble_loss) + weights_loss
 
         loss.backward()
         optimizer.step()

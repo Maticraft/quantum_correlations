@@ -13,7 +13,6 @@ from commons.models.ensemble import Ensemble
 from commons.models.separator_classifiers import FancySeparatorEnsembleClassifier
 from commons.models.separator_classifiers import FancyClassifier
 from commons.test_utils.base import test
-from commons.train_utils.ensemble import train_ensemble
 from commons.pytorch_utils import save_acc
 
 batch_size = 128
@@ -42,9 +41,9 @@ bennet_root_dir = f'./datasets/{qbits_num}qbits/bennet_test/matrices/'
 biseparable_dictionary_path = f'./datasets/{qbits_num}qbits/biseparable_test/negativity_bipartitions.txt'
 biseparable_root_dir = f'./datasets/{qbits_num}qbits/biseparable_test/matrices/'
 
-results_dir = f'./results/{qbits_num}qbits/nopptes_bisep/'
+results_dir = f'./results/{qbits_num}qbits/nopptes_bisep_test/'
 model_dir = f'./models/{qbits_num}qbits/nopptes_bisep/'
-model_name = 'ensemble_cnn_sep_ens_select_new_loss_no_weights_train_best_class2'
+model_name = 'ensemble_cnn_sep_ens_select_class'
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -99,20 +98,16 @@ results_path = results_dir + model_name + '.txt'
 
 model = Ensemble(CNN, cnn_params, ensemble_size, FancySeparatorEnsembleClassifier, selector_model_params)
 model.double()
-optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
-train_criterion = torch.nn.BCELoss(reduction='none')
+model.load_state_dict(torch.load(model_path))
 test_criterion = torch.nn.BCELoss()
 
-save_acc(results_path, 'Epoch', ['Train loss', 'Validation loss', 'Validation accuracy', 'Mixed loss', 'Mixed accuracy', 'ACIN loss', 'ACIN accuracy', 'Horodecki loss', 'Horodecki accuracy', 'Bennet loss', 'Bennet accuracy', 'Bisep loss', 'Bisep accuracy'], write_mode='w')
-
-for epoch in range(epoch_num):
-    train_loss = train_ensemble(model, device, train_loader, optimizer, epoch, batch_interval)
-    val_loss, val_acc = test(model, device, val_loader, test_criterion, "Validation data set", bipart=True)
-    mixed_loss, mixed_acc = test(model, device, test_mixed_loader, test_criterion, "Mixed data set", bipart=True)
-    acin_loss, acin_acc = test(model, device, test_acin_loader, test_criterion, "ACIN data set", bipart=True) 
-    horodecki_loss, horodecki_acc = test(model, device, test_horodecki_loader, test_criterion, "Horodecki data set", bipart=True)
-    bennet_loss, bennet_acc = test(model, device, test_bennet_loader, test_criterion, "Bennet data set", bipart=True)   
-    biseparable_loss, biseparable_acc = test(model, device, test_biseparable_loader, test_criterion, "Biseparable data set", bipart=True)
-    save_acc(results_path, epoch, [train_loss, val_loss, val_acc, mixed_loss, mixed_acc, acin_loss, acin_acc, horodecki_loss, horodecki_acc,\
-                            bennet_loss, bennet_acc, biseparable_loss, biseparable_acc])
-    torch.save(model.state_dict(), model_path)
+save_acc(results_path, '', ['Train loss', 'Train accuracy', 'Validation loss', 'Validation accuracy', 'Mixed loss', 'Mixed accuracy', 'ACIN loss', 'ACIN accuracy', 'Horodecki loss', 'Horodecki accuracy', 'Bennet loss', 'Bennet accuracy', 'Bisep loss', 'Bisep accuracy'], write_mode='w')
+train_loss, train_acc = test(model, device, train_loader, test_criterion, 'Train data set', bipart=True)
+val_loss, val_acc = test(model, device, val_loader, test_criterion, "Validation data set", bipart=True)
+mixed_loss, mixed_acc = test(model, device, test_mixed_loader, test_criterion, "Mixed data set", bipart=True)
+acin_loss, acin_acc = test(model, device, test_acin_loader, test_criterion, "ACIN data set", bipart=True) 
+horodecki_loss, horodecki_acc = test(model, device, test_horodecki_loader, test_criterion, "Horodecki data set", bipart=True)
+bennet_loss, bennet_acc = test(model, device, test_bennet_loader, test_criterion, "Bennet data set", bipart=True)   
+biseparable_loss, biseparable_acc = test(model, device, test_biseparable_loader, test_criterion, "Biseparable data set", bipart=True)
+save_acc(results_path, '', [train_loss, train_acc, val_loss, val_acc, mixed_loss, mixed_acc, acin_loss, acin_acc, horodecki_loss, horodecki_acc,\
+                        bennet_loss, bennet_acc, biseparable_loss, biseparable_acc])
