@@ -125,7 +125,7 @@ class MixedReducedStatesGenerator():
 
 
     @generate_with_assertion(batch_size=100)
-    def generate_circuit_matrices(self, examples, qubits_num, pure_state_qubits, save_data_dir = None, random_gates = 2, specified_method = None, start_index = 0, encoded = True, label_potent_ppt = False, zero_neg = 'incl', discord = False, fully_entangled = False, with_permutations = False, num_near_zero_eigvals = None, format = 'npy'):
+    def generate_circuit_matrices(self, examples, qubits_num, pure_state_qubits, save_data_dir = None, random_gates = 2, specified_method = None, start_index = 0, encoded = True, label_potent_ppt = False, zero_neg = 'incl', discord = False, fully_entangled = False, with_permutations = False, num_near_zero_eigvals = None, format = 'npy', separator_loss_range = None):
         # possible methods:
         # 0: W state
         # 1: GHZ state
@@ -145,7 +145,8 @@ class MixedReducedStatesGenerator():
             'zero_neg': zero_neg,
             'discord': discord,     
             'num_near_zero_eigvals': num_near_zero_eigvals,
-            'format': format
+            'format': format,
+            'separator_loss_range': separator_loss_range,
         }
 
         self._initialize_generator(examples, qubits_num, pure_state_qubits, with_permutations)
@@ -415,7 +416,7 @@ class MixedReducedStatesGenerator():
 
     # random from Haar metrics
     @generate_with_assertion(batch_size=100)
-    def generate_random_haar_matrices(self, examples, qubits_num, pure_state_qubits, save_data_dir = None, start_index = 0, encoded = True, label_potent_ppt = False, zero_neg = 'incl', discord = False, separable_only = False, with_permutations = False, format = 'npy'):
+    def generate_random_haar_matrices(self, examples, qubits_num, pure_state_qubits, save_data_dir = None, start_index = 0, encoded = True, label_potent_ppt = False, zero_neg = 'incl', discord = False, separable_only = False, with_permutations = False, format = 'npy', separator_loss_range = None):
         self._initialize_generator(examples, qubits_num, pure_state_qubits, with_permutations)
 
         not_ent_qbits = []
@@ -456,7 +457,7 @@ class MixedReducedStatesGenerator():
                 ro, _ = self._permute_matrix(ro)
 
             if save_data_dir:
-                save_dens_matrix_with_labels(self.num_qubits, f"dens{start_index + i}", ro, f"random_mixed", 'random', save_data_dir, ppt = label_potent_ppt, separate_bipart=encoded, not_ent_qbits= not_ent_qbits, zero_neg= zero_neg, discord = discord, format = format)
+                save_dens_matrix_with_labels(self.num_qubits, f"dens{start_index + i}", ro, f"random_mixed", 'random', save_data_dir, ppt = label_potent_ppt, separate_bipart=encoded, not_ent_qbits= not_ent_qbits, zero_neg= zero_neg, discord = discord, format = format, separator_loss_range = separator_loss_range)
             else:
                 return_matrices.append(ro)
 

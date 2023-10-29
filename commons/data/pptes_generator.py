@@ -17,7 +17,7 @@ class PPTESGenerator():
 
     # those are in fact mixed states (PPTES)
     @generate_with_assertion()
-    def generate_3qbits_pptes(self, qubits_num, examples, save_data_dir, entanglement_class = "Horodecki", randomization = False, start_index = 0, encoded = True, ppt = True, discord = False, with_permutations = False, format = 'npy'):
+    def generate_3qbits_pptes(self, qubits_num, examples, save_data_dir, entanglement_class = "Horodecki", randomization = False, start_index = 0, encoded = True, ppt = True, discord = False, with_permutations = False, format = 'npy', separator_loss_range = None):
         self._initialize_generator(examples, qubits_num, with_permutations)
         if self.num_qubits != 3:
             raise ValueError("Bound entangled state implemented only for 3 qubits")
@@ -52,7 +52,7 @@ class PPTESGenerator():
                 dm = permute_matrix(rand_perm, dm)
 
             if save_data_dir != None:
-                save_dens_matrix_with_labels(self.num_qubits, f"dens{start_index + i}", dm, f"{entanglement_class}_ppt_entangled_state", "unknown", save_data_dir, ppt=ppt, separate_bipart=encoded, discord=discord, format=format)
+                save_dens_matrix_with_labels(self.num_qubits, f"dens{start_index + i}", dm, f"{entanglement_class}_ppt_entangled_state", "unknown", save_data_dir, ppt=ppt, separate_bipart=encoded, discord=discord, format=format, separator_loss_range=separator_loss_range)
             else:
                 matrices.append(dm)
         
@@ -127,7 +127,7 @@ class PPTESGenerator():
 
 
     @generate_with_assertion()
-    def generate_extended_3q_pptes(self, qubits_num, examples, save_data_dir, entanglement_class = "Horodecki", randomization = False, start_index = 0, encoded = True, ppt = True, discord = False, with_permutations = False, format = 'npy'):
+    def generate_extended_3q_pptes(self, qubits_num, examples, save_data_dir, entanglement_class = "Horodecki", randomization = False, start_index = 0, encoded = True, ppt = True, discord = False, with_permutations = False, format = 'npy', separator_loss_range = None):
         assert qubits_num > 3, "Number of qubits must be greater than 3"
         dms_3q = self.generate_3qbits_pptes(3, examples, None, entanglement_class, randomization, start_index, encoded, ppt)
         self._initialize_generator(examples, qubits_num, with_permutations)
@@ -151,12 +151,12 @@ class PPTESGenerator():
                 not_ent_qbits = [rand_perm.index(x) for x in not_ent_qbits]
                 ext_dm = permute_matrix(rand_perm, ext_dm)
 
-            save_dens_matrix_with_labels(self.num_qubits, f"dens{start_index + i}", ext_dm, f"extended_{entanglement_class}_pptes", f"3/{self.num_qubits}", save_data_dir, ppt = ppt, separate_bipart=encoded, not_ent_qbits=not_ent_qbits, discord = discord, format=format)
+            save_dens_matrix_with_labels(self.num_qubits, f"dens{start_index + i}", ext_dm, f"extended_{entanglement_class}_pptes", f"3/{self.num_qubits}", save_data_dir, ppt = ppt, separate_bipart=encoded, not_ent_qbits=not_ent_qbits, discord = discord, format=format, separator_loss_range=separator_loss_range)
 
 
     # Generalization of Horodecki 2 x 4 PPTES for 2 x d dimension, i.e. this method applicates for arbitrary number of qubits
     @generate_with_assertion()
-    def generate_2xd_pptes(self, qubits_num, examples, save_data_dir, randomization = False, start_index = 0, encoded = True, discord = False, with_permutations = False, format = 'npy'):
+    def generate_2xd_pptes(self, qubits_num, examples, save_data_dir, randomization = False, start_index = 0, encoded = True, discord = False, with_permutations = False, format = 'npy', separator_loss_range = None):
         self._initialize_generator(examples, qubits_num, with_permutations)
         dim = 2**self.num_qubits
         d = dim // 2
@@ -173,7 +173,7 @@ class PPTESGenerator():
                 rand_perm = qubits_perm[np.random.randint(len(qubits_perm))]
                 dm = permute_matrix(rand_perm, dm)
 
-            save_dens_matrix_with_labels(self.num_qubits, f"dens{start_index + ex}", dm, f"2xd_pptes", "unknown", save_data_dir, ppt=True, separate_bipart=encoded, discord = discord, format=format)
+            save_dens_matrix_with_labels(self.num_qubits, f"dens{start_index + ex}", dm, f"2xd_pptes", "unknown", save_data_dir, ppt=True, separate_bipart=encoded, discord = discord, format=format, separator_loss_range=separator_loss_range)
 
 
     @staticmethod

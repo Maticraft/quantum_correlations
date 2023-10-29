@@ -3,8 +3,10 @@ from pathlib import Path
 
 import numpy as np
 import scipy
+import torch
 
 from commons.metrics import combinations_num, global_entanglement_bipartitions, global_entanglement
+from commons.data.filters import init_default_separator_filter
 
 
 DATASETS_DIR_NAME = "datasets"
@@ -17,7 +19,7 @@ NUM_NEAR_ZERO_EIGVALS_BIPART_DICT_NAME = "num_near_zero_eigvals_bipartitions.txt
 CONFIDENCE_THRESHOLD = 0.0001
 
 # Save generated density matrix with corresponding metrics to the given destination, depending on the data type
-def save_dens_matrix_with_labels(num_qubits, filename, ro, method, entangled_qbits, save_data_dir = "train", ppt = False, separate_bipart = False, not_ent_qbits = [], zero_neg = 'incl', discord = False, trace_reconstruction = False, num_near_zero_eigvals = None, format = 'npy'):
+def save_dens_matrix_with_labels(num_qubits, filename, ro, method, entangled_qbits, save_data_dir = "train", ppt = False, separate_bipart = False, not_ent_qbits = [], zero_neg = 'incl', discord = False, trace_reconstruction = False, num_near_zero_eigvals = None, format = 'npy', separator_loss_range = None):
     if ppt and zero_neg == 'none':
         raise NotImplementedError("Labeling potential PPTES not implemented for nonzero states")
 
@@ -31,8 +33,10 @@ def save_dens_matrix_with_labels(num_qubits, filename, ro, method, entangled_qbi
     neg_glob, neg_bipart, disc_glob, disc_bipart = _get_neg_and_disc(ro)
     
     bipart_metrics, bipart_dict_paths = _get_bipart_metrics(ro, discord, data_dir, separate_bipart, ppt, not_ent_qbits)
+
+    separator_filter = _create_separator_filter(num_qubits, separator_loss_range)
     
-    if num_near_zero_eigvals_matches(num_near_zero_eigvals, bipart_metrics):
+    if num_near_zero_eigvals_matches(num_near_zero_eigvals, bipart_metrics) and separator_filter(ro):
         if zero_neg == 'incl':
             _save_data(file_path, ro, filename, dictionary_path, method, entangled_qbits, all_bipart_metrics=bipart_metrics, bipart_dict_paths=bipart_dict_paths, extra_info=extra_info, ppt=ppt, format=format)
 
@@ -64,6 +68,17 @@ def num_near_zero_eigvals_matches(num_near_zero_eigvals, bipart_metrics):
         num_near_zero_eigvals_metrics = bipart_metrics[num_near_zero_eigvals_metrics_idx]
         return np.all(np.array(num_near_zero_eigvals_metrics) == num_near_zero_eigvals) # check if all elements are equal
     return True
+
+
+def _create_separator_filter(qubits_num, separator_loss_range):
+    if qubits_num == 3 and separator_loss_range is not None:
+        separator_filter = init_default_separator_filter()
+        def custom_separator_filter(ro):
+            tensor_data = torch.from_numpy(ro.data)
+            tensor_data = torch.stack([tensor_data.real, tensor_data.imag])
+            return separator_filter(tensor_data, separator_loss_range)
+        return custom_separator_filter
+    return lambda x: True
 
 
 def _make_dir(dir_path):

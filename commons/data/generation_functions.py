@@ -127,7 +127,7 @@ def generate_parametrized_np_qs(a, p, fi, c, qubits_num = 3):
 
 
 # DISCORD PAPER TRAIN PURE SEPARABLE 2/2 (examples = 30000, pure = True, discord = True, separable = True)
-def generate_parametrized(qbits, encoded, indx = 0, save_data_dir = 'parametrized', examples = 20000, local_randomization = True, pure=False, zero_neg = 'incl', discord = False, permute = False, separable = False, format = 'npy'):
+def generate_parametrized(qbits, encoded, indx = 0, save_data_dir = 'parametrized', examples = 20000, local_randomization = True, pure=False, zero_neg = 'incl', discord = False, permute = False, separable = False, format = 'npy', separator_loss_range = None):
     a_real_range = np.arange(0., 1.01, 0.01)
     if not pure:
         c_real_range = np.arange(0., 1.01, 0.01)
@@ -159,12 +159,12 @@ def generate_parametrized(qbits, encoded, indx = 0, save_data_dir = 'parametrize
             rand_perm = qubits_perm[np.random.randint(len(qubits_perm))]
             rho = permute_matrix(rand_perm, rho)
         
-        save_dens_matrix_with_labels(qbits, f"dens{indx + i}", rho, "random parametrized", 'unknown', save_data_dir, separate_bipart=encoded, zero_neg= zero_neg, discord = discord, format=format)
+        save_dens_matrix_with_labels(qbits, f"dens{indx + i}", rho, "random parametrized", 'unknown', save_data_dir, separate_bipart=encoded, zero_neg= zero_neg, discord = discord, format=format, separator_loss_range=separator_loss_range)
     return indx + examples
     
                 
 # ENTANGLEMENT TRAIN SET 1/3 (SAME FOR ALL 3 DATASETS)
-def generate_pure_train_balanced(qubits, encoded, indx = 0, save_data_dir = 'pure_train_balanced', examples_ratio = 1., max_num_ps = None, discord = False, biseparable = False, zero_neg = 'none', label_potent_ppt = False, format = 'npy'):
+def generate_pure_train_balanced(qubits, encoded, indx = 0, save_data_dir = 'pure_train_balanced', examples_ratio = 1., max_num_ps = None, discord = False, biseparable = False, zero_neg = 'none', label_potent_ppt = False, format = 'npy', separator_loss_range = None):
     args = {
         'qubits_num': qubits,
         'encoded': encoded,
@@ -173,6 +173,7 @@ def generate_pure_train_balanced(qubits, encoded, indx = 0, save_data_dir = 'pur
         'discord': discord,
         'start_index': indx,
         'format': format,
+        'separator_loss_range': separator_loss_range,
     }
     generator = PureStatesGenerator()
     args['start_index'] = generator.generate_circuit_matrices(**args, examples=int(examples_ratio*20000), specified_method=0)
@@ -186,13 +187,13 @@ def generate_pure_train_balanced(qubits, encoded, indx = 0, save_data_dir = 'pur
     args['start_index'] = generator.generate_multi_mixed_matrices(**args, examples=int(examples_ratio*20000), num_pure_states=1, specified_method='kron_sep_haar')
  
     if biseparable:
-        args['start_index'] = generate_mixed_biseparable_haar(qubits, encoded, args['start_index'], save_data_dir, examples_ratio, nps = 1, examples = 20000, discord = discord, label_potent_ppt = label_potent_ppt, zero_neg = zero_neg, format = format)
+        args['start_index'] = generate_mixed_biseparable_haar(qubits, encoded, args['start_index'], save_data_dir, examples_ratio, nps = 1, examples = 20000, discord = discord, label_potent_ppt = label_potent_ppt, zero_neg = zero_neg, format = format, separator_loss_range = separator_loss_range)
 
     return args['start_index']
 
 
 # ENTANGLEMENT TRAIN SET 2/3
-def generate_mixed_def_train_balanced(qubits, encoded, indx = 0, save_data_dir = 'mixed_def_train_balanced', examples_ratio = 1., max_num_ps = None, discord = False, biseparable = False, zero_neg = 'none', label_potent_ppt = False, format = 'npy'):
+def generate_mixed_def_train_balanced(qubits, encoded, indx = 0, save_data_dir = 'mixed_def_train_balanced', examples_ratio = 1., max_num_ps = None, discord = False, biseparable = False, zero_neg = 'none', label_potent_ppt = False, format = 'npy', separator_loss_range = None):
     args = {
         'qubits_num': qubits,
         'encoded': encoded,
@@ -201,6 +202,7 @@ def generate_mixed_def_train_balanced(qubits, encoded, indx = 0, save_data_dir =
         'discord': discord,
         'start_index': indx,
         'format': format,
+        'separator_loss_range': separator_loss_range,
     }
 
     generator = MixedDefStatesGenerator()
@@ -228,6 +230,7 @@ def generate_mixed_def_train_balanced(qubits, encoded, indx = 0, save_data_dir =
             'label_potent_ppt': label_potent_ppt,
             'zero_neg': zero_neg,
             'format': format,
+            'separator_loss_range': separator_loss_range,
         }
         bisep_args['indx'] = generate_mixed_biseparable(**bisep_args)
         bisep_args['indx'] = generate_mixed_biseparable(**bisep_args, mixing_mode='inner')
@@ -240,7 +243,7 @@ def generate_mixed_def_train_balanced(qubits, encoded, indx = 0, save_data_dir =
     return args['start_index']
 
 
-def generate_mixed_def_train_discordant(qubits, encoded, indx = 0, save_data_dir = 'mixed_def_train_discordant', examples_ratio = 1., max_num_ps = None, discord = False, biseparable = False, zero_neg = 'none', label_potent_ppt = False, format = 'npy'):
+def generate_mixed_def_train_discordant(qubits, encoded, indx = 0, save_data_dir = 'mixed_def_train_discordant', examples_ratio = 1., max_num_ps = None, discord = False, biseparable = False, zero_neg = 'none', label_potent_ppt = False, format = 'npy', separator_loss_range = None):
     # total num of examples: 140000 separable + 100000 entangled (+ optionally 80000 biseparable)
     args = {
         'qubits_num': qubits,
@@ -251,6 +254,7 @@ def generate_mixed_def_train_discordant(qubits, encoded, indx = 0, save_data_dir
         'start_index': indx,
         'format': format,
         'max_num_ps': max_num_ps,
+        'separator_loss_range': separator_loss_range,
     }
     generator = MixedDefStatesGenerator()
     args['start_index'] = generator.generate_multi_mixed_matrices(**args, examples=int(examples_ratio*40000), num_pure_states="random", specified_method=[0, 3], base_size=10000, zero_neg=zero_neg, label_potent_ppt=label_potent_ppt)
@@ -275,6 +279,7 @@ def generate_mixed_def_train_discordant(qubits, encoded, indx = 0, save_data_dir
             'label_potent_ppt': label_potent_ppt,
             'zero_neg': zero_neg,
             'format': format,
+            'separator_loss_range': separator_loss_range,
         }
         bisep_args['indx'] = generate_mixed_biseparable(**bisep_args, mixing_mode='outer')
         bisep_args['indx'] = generate_mixed_biseparable(**bisep_args, mixing_mode='comb')
@@ -287,7 +292,7 @@ def generate_mixed_def_train_discordant(qubits, encoded, indx = 0, save_data_dir
 
 # DISCORD PAPER TRAIN PURE SEPARABLE SET 1/2
 # DISCORD PAPER VALIDATION SET 1/3 RATIO 0.1
-def generate_pure_only_train_separable(qubits, encoded, indx = 0, save_data_dir = 'train_pure_separable', examples_ratio = 1., discord = False, format = 'npy'):
+def generate_pure_only_train_separable(qubits, encoded, indx = 0, save_data_dir = 'train_pure_separable', examples_ratio = 1., discord = False, format = 'npy', separator_loss_range = None):
     args = {
         'qubits_num': qubits,
         'encoded': encoded,
@@ -295,6 +300,7 @@ def generate_pure_only_train_separable(qubits, encoded, indx = 0, save_data_dir 
         'save_data_dir': save_data_dir,
         'discord': discord,
         'format': format,
+        'separator_loss_range': separator_loss_range,
     }
     pure_generator = PureStatesGenerator()
     args['start_index'] = pure_generator.generate_circuit_matrices(**args, specified_method=0, examples=int(examples_ratio*40000))
@@ -306,7 +312,7 @@ def generate_pure_only_train_separable(qubits, encoded, indx = 0, save_data_dir 
 
 
 # DISCORD PAPER VALIDATION SET 2/3 RATIO 0.1
-def generate_mixed_def_train_separable(qubits, encoded, indx = 0, save_data_dir = 'train_mixed_separable', examples_ratio = 1., discord = False, biseparable = True, max_num_ps = None, format = 'npy'):
+def generate_mixed_def_train_separable(qubits, encoded, indx = 0, save_data_dir = 'train_mixed_separable', examples_ratio = 1., discord = False, biseparable = True, max_num_ps = None, format = 'npy', separator_loss_range = None):
     generator = MixedDefStatesGenerator()
     args = {
         'qubits_num': qubits,
@@ -317,6 +323,7 @@ def generate_mixed_def_train_separable(qubits, encoded, indx = 0, save_data_dir 
         'max_num_ps': max_num_ps,
         'start_index': indx,
         'format': format,
+        'separator_loss_range': separator_loss_range,
     }
 
     args['start_index'] = generator.generate_multi_mixed_matrices(**args, specified_method=0, examples= int(examples_ratio*40000), base_size=int(examples_ratio*20000))
@@ -331,7 +338,7 @@ def generate_mixed_def_train_separable(qubits, encoded, indx = 0, save_data_dir 
 
 
 # DISCORD TRAIN PRODUCT EXTENSION SET 1/2
-def generate_mixed_def_train_product(qubits, encoded, indx = 0, save_data_dir = 'train_mixed_separable', examples_ratio = 1., discord = False, max_num_ps = None, format = 'npy'):
+def generate_mixed_def_train_product(qubits, encoded, indx = 0, save_data_dir = 'train_mixed_separable', examples_ratio = 1., discord = False, max_num_ps = None, format = 'npy', separator_loss_range = None):
     generator = MixedDefStatesGenerator()
     args = {
         'qubits_num': qubits,
@@ -345,13 +352,14 @@ def generate_mixed_def_train_product(qubits, encoded, indx = 0, save_data_dir = 
         'mixing_mode': 'inner',
         'base_size': int(examples_ratio*20000),
         'format': format,
+        'separator_loss_range': separator_loss_range,
     }
     args['start_index'] = generator.generate_multi_mixed_matrices(**args, specified_method='kron_sep_circ')
     args['start_index'] = generator.generate_multi_mixed_matrices(**args, specified_method='kron_sep_haar')
     return args['start_index']
 
 
-def generate_mixed_biseparable(qubits_num, encoded, indx = 0, save_data_dir = 'biseparable', examples_ratio = 1., nps = 'random', max_num_ps = None, examples = 20000, with_permutations=True, discord = False, mixing_mode = 'outer', zero_neg = 'none', label_potent_ppt = False, format = 'npy'):
+def generate_mixed_biseparable(qubits_num, encoded, indx = 0, save_data_dir = 'biseparable', examples_ratio = 1., nps = 'random', max_num_ps = None, examples = 20000, with_permutations=True, discord = False, mixing_mode = 'outer', zero_neg = 'none', label_potent_ppt = False, format = 'npy', separator_loss_range = None):
     generator = MixedDefStatesGenerator()
     return generator.generate_multi_mixed_matrices(
         qubits_num=qubits_num,
@@ -368,11 +376,12 @@ def generate_mixed_biseparable(qubits_num, encoded, indx = 0, save_data_dir = 'b
         mixing_mode=mixing_mode,
         with_permutations=with_permutations,
         label_potent_ppt=label_potent_ppt,
-        format=format
+        format=format,
+        separator_loss_range=separator_loss_range,
     )
 
 
-def generate_mixed_biseparable_haar(qubits_num, encoded, indx = 0, save_data_dir = 'biseparable_haar', examples_ratio = 1., nps = 'random', max_num_ps = None, examples = 20000, with_permutations=True, discord = False, mixing_mode = 'outer', zero_neg='none', label_potent_ppt=False, format = 'npy'):
+def generate_mixed_biseparable_haar(qubits_num, encoded, indx = 0, save_data_dir = 'biseparable_haar', examples_ratio = 1., nps = 'random', max_num_ps = None, examples = 20000, with_permutations=True, discord = False, mixing_mode = 'outer', zero_neg='none', label_potent_ppt=False, format = 'npy', separator_loss_range = None):
     generator = MixedDefStatesGenerator()
     return generator.generate_multi_mixed_matrices(
         qubits_num=qubits_num,
@@ -388,12 +397,13 @@ def generate_mixed_biseparable_haar(qubits_num, encoded, indx = 0, save_data_dir
         mixing_mode=mixing_mode,
         with_permutations=with_permutations,
         label_potent_ppt=label_potent_ppt,
-        format=format
+        format=format,
+        separator_loss_range=separator_loss_range,
     )
 
 
 # For test use examples_ratio = 0.1
-def generate_biseparable_test(qubits_num, encoded, indx = 0, save_data_dir = 'biseparable_test', examples_ratio = 1., max_num_ps = None, discord = False, zero_neg='none', label_potent_ppt=False, permute=True, format = 'npy'):
+def generate_biseparable_test(qubits_num, encoded, indx = 0, save_data_dir = 'biseparable_test', examples_ratio = 1., max_num_ps = None, discord = False, zero_neg='none', label_potent_ppt=False, permute=True, format = 'npy', separator_loss_range = None):
     bisep_args = {
         'qubits_num': qubits_num,
         'encoded': encoded,
@@ -407,6 +417,7 @@ def generate_biseparable_test(qubits_num, encoded, indx = 0, save_data_dir = 'bi
         'label_potent_ppt': label_potent_ppt,
         'zero_neg': zero_neg,
         'format': format,
+        'separator_loss_range': separator_loss_range,
     }
     bisep_args['indx'] = generate_mixed_biseparable(**bisep_args)
     bisep_args['indx'] = generate_mixed_biseparable(**bisep_args, mixing_mode='inner')
@@ -421,7 +432,7 @@ def generate_biseparable_test(qubits_num, encoded, indx = 0, save_data_dir = 'bi
 
 # ENTANGLEMENT PAPER PURE TEST SET
 # DISCORD PAPER PURE TEST SET
-def generate_pure_test(qubits, encoded, indx = 0, save_data_dir = 'pure_test', discord=False, format = 'npy'):
+def generate_pure_test(qubits, encoded, indx = 0, save_data_dir = 'pure_test', discord=False, format = 'npy', separator_loss_range = None):
     args = {
         'qubits_num': qubits,
         'save_data_dir': save_data_dir,
@@ -429,6 +440,7 @@ def generate_pure_test(qubits, encoded, indx = 0, save_data_dir = 'pure_test', d
         'discord': discord,
         'start_index': indx,
         'format': format,
+        'separator_loss_range': separator_loss_range,
     }
     pure_generator = PureStatesGenerator()
     args['start_index'] = pure_generator.generate_circuit_matrices(**args, examples=5000, specified_method= 0)
@@ -443,7 +455,7 @@ def generate_pure_test(qubits, encoded, indx = 0, save_data_dir = 'pure_test', d
 
 # ENTANGLEMENT TEST SET 1/2
 # DISCORD TEST SET 1/3
-def generate_mixed_test_def(qubits, encoded, indx = 0, save_data_dir='mixed_test_val', max_num_ps = None, discord = False, permute = False, format = 'npy'):
+def generate_mixed_test_def(qubits, encoded, indx = 0, save_data_dir='mixed_test_val', max_num_ps = None, discord = False, permute = False, format = 'npy', separator_loss_range = None):
     generator = MixedDefStatesGenerator()
     args = {
         'qubits_num': qubits,
@@ -457,6 +469,7 @@ def generate_mixed_test_def(qubits, encoded, indx = 0, save_data_dir='mixed_test
         'max_num_ps': max_num_ps,
         'discord': discord,
         'format': format,
+        'separator_loss_range': separator_loss_range,
     }
     args['start_index'] = generator.generate_multi_mixed_matrices(**args, specified_method='kron_sep_circ', mixing_mode='outer')
     args['start_index'] = generator.generate_multi_mixed_matrices(**args, specified_method='kron_sep_circ', mixing_mode='inner')
@@ -475,7 +488,7 @@ def generate_mixed_test_def(qubits, encoded, indx = 0, save_data_dir='mixed_test
 # DISCORD TRAIN ZD EXTENSION RATIO 10 
 # DISCORD TRAIN NON PRODUCT SET 1/2 RATIO 20
 # DISCORD TEST SET 3/3 RATIO 1.5
-def generate_non_product_zero_discord(qubits, encoded, indx = 0, save_data_dir = 'npzd_test', examples_ratio = 1., discord = False, max_num_ps = None, format = 'npy'):
+def generate_non_product_zero_discord(qubits, encoded, indx = 0, save_data_dir = 'npzd_test', examples_ratio = 1., discord = False, max_num_ps = None, format = 'npy', separator_loss_range = None):
     generator = MixedDefStatesGenerator()
     args = {
         'qubits_num': qubits, 
@@ -487,6 +500,7 @@ def generate_non_product_zero_discord(qubits, encoded, indx = 0, save_data_dir =
         'discord': discord,
         'start_index': indx,
         'format': format,
+        'separator_loss_range': separator_loss_range,
     }
     args['start_index'] = generator.generate_multi_mixed_matrices(**args, num_pure_states=2, specified_method='simple_non_product_zero_discord')
     args['start_index'] = generator.generate_multi_mixed_matrices(**args, num_pure_states='random', specified_method='random_non_product_zero_discord')
@@ -495,7 +509,7 @@ def generate_non_product_zero_discord(qubits, encoded, indx = 0, save_data_dir =
 
 # DISCORD TRAIN SEP EXTENSION RATIO 6
 # DISCORD TRAIN NON PRODUCT SET 2/2 RATIO 8
-def generate_discordant_separable(qubits, encoded, indx = 0, save_data_dir = 'ds_test', examples_ratio = 1., discord = False, max_num_ps = None, format = 'npy'):
+def generate_discordant_separable(qubits, encoded, indx = 0, save_data_dir = 'ds_test', examples_ratio = 1., discord = False, max_num_ps = None, format = 'npy', separator_loss_range = None):
     generator = MixedDefStatesGenerator()
     args = {
         'qubits_num': qubits, 
@@ -506,6 +520,7 @@ def generate_discordant_separable(qubits, encoded, indx = 0, save_data_dir = 'ds
         'discord': discord,
         'start_index': indx,
         'format': format,
+        'separator_loss_range': separator_loss_range,
     }
     args['start_index'] = generator.generate_multi_mixed_matrices(**args, specified_method=0, examples=int(examples_ratio*10000), base_size=int(examples_ratio*10000))
     args['start_index'] = generator.generate_multi_mixed_matrices(**args, specified_method='kron_sep_circ', examples=int(examples_ratio*5000), base_size=int(examples_ratio*5000), mixing_mode='outer')
@@ -513,7 +528,7 @@ def generate_discordant_separable(qubits, encoded, indx = 0, save_data_dir = 'ds
     return args['start_index']
 
 
-def generate_pseudo_acin_pptes(qubits, encoded, indx = 0, qubits_glob = 9, save_data_dir = 'pseudo_acin_pptes', examples_ratio = 1., discord = False, zero_neg = 'incl', label_potent_ppt = True, format = 'npy'):
+def generate_pseudo_acin_pptes(qubits, encoded, indx = 0, qubits_glob = 9, save_data_dir = 'pseudo_acin_pptes', examples_ratio = 1., discord = False, zero_neg = 'incl', label_potent_ppt = True, format = 'npy', separator_loss_range = None):
     generator = MixedReducedStatesGenerator()
     args = {
         'qubits_num': qubits,
@@ -527,12 +542,13 @@ def generate_pseudo_acin_pptes(qubits, encoded, indx = 0, qubits_glob = 9, save_
         'zero_neg': zero_neg,
         'label_potent_ppt': label_potent_ppt,
         'format': format,
+        'separator_loss_range': separator_loss_range,
     }
     args['start_index'] = generator.generate_circuit_matrices(**args, specified_method=ReducedMethods.RandomEntanglement)
     return args['start_index']
 
 
-def generate_pptes(qbits, encoded, indx = 0, save_data_dir = 'pptes', examples_ratio = 1., discord = False, format = 'npy'):
+def generate_pptes(qbits, encoded, indx = 0, save_data_dir = 'pptes', examples_ratio = 1., discord = False, format = 'npy', separator_loss_range = None):
     generator = PPTESGenerator()
     args = {
         'qubits_num': qbits, 
@@ -544,6 +560,7 @@ def generate_pptes(qbits, encoded, indx = 0, save_data_dir = 'pptes', examples_r
         'discord': discord,
         'start_index': indx,
         'format': format,
+        'separator_loss_range': separator_loss_range,
     }
     args['start_index'] = generator.generate_3qbits_pptes(**args, entanglement_class='Horodecki')
     args['start_index'] = generator.generate_3qbits_pptes(**args, entanglement_class='Acin')
@@ -552,7 +569,7 @@ def generate_pptes(qbits, encoded, indx = 0, save_data_dir = 'pptes', examples_r
 
 
 # ENTANGLEMENT PPTES ACIN SET
-def generate_acin(qbits, encoded, indx = 0, save_data_dir = 'pptes_acin', examples_ratio = 1., discord = False, format = 'npy'):
+def generate_acin(qbits, encoded, indx = 0, save_data_dir = 'pptes_acin', examples_ratio = 1., discord = False, format = 'npy', separator_loss_range = None):
     generator = PPTESGenerator()
     args = {
         'qubits_num': qbits, 
@@ -564,13 +581,14 @@ def generate_acin(qbits, encoded, indx = 0, save_data_dir = 'pptes_acin', exampl
         'discord': discord,
         'start_index': indx,
         'format': format,
+        'separator_loss_range': separator_loss_range,
     }
     args['start_index'] = generator.generate_3qbits_pptes(**args, entanglement_class='Acin')
     return args['start_index']
 
 
 # ENTANGLEMENT PPTES ACIN SET
-def generate_extended_acin(qbits, encoded, indx = 0, save_data_dir = 'pptes_extended_acin', examples_ratio = 1., discord = False, format = 'npy'):
+def generate_extended_acin(qbits, encoded, indx = 0, save_data_dir = 'pptes_extended_acin', examples_ratio = 1., discord = False, format = 'npy', separator_loss_range = None):
     generator = PPTESGenerator()
     args = {
         'qubits_num': qbits, 
@@ -582,13 +600,14 @@ def generate_extended_acin(qbits, encoded, indx = 0, save_data_dir = 'pptes_exte
         'discord': discord,
         'start_index': indx,
         'format': format,
+        'separator_loss_range': separator_loss_range,
     }
     args['start_index'] = generator.generate_extended_3q_pptes(**args, entanglement_class='Acin')
     return args['start_index']
 
 
 # ENTANGLEMENT PPTES HORODECKI SET
-def generate_horodecki(qbits, encoded, indx = 0, save_data_dir = 'pptes_horodecki', examples_ratio = 1., discord = False, format = 'npy'):
+def generate_horodecki(qbits, encoded, indx = 0, save_data_dir = 'pptes_horodecki', examples_ratio = 1., discord = False, format = 'npy', separator_loss_range = None):
     generator = PPTESGenerator()
     args = {
         'qubits_num': qbits, 
@@ -600,13 +619,14 @@ def generate_horodecki(qbits, encoded, indx = 0, save_data_dir = 'pptes_horodeck
         'discord': discord,
         'start_index': indx,
         'format': format,
+        'separator_loss_range': separator_loss_range,
     }
     args['start_index'] = generator.generate_3qbits_pptes(**args, entanglement_class='Horodecki')
     return args['start_index']
 
 
 # ENTANGLEMENT PPTES BENNET SET
-def generate_bennet(qbits, encoded, indx = 0, save_data_dir = 'pptes_bennet', examples_ratio = 1., discord = False, format = 'npy'):
+def generate_bennet(qbits, encoded, indx = 0, save_data_dir = 'pptes_bennet', examples_ratio = 1., discord = False, format = 'npy', separator_loss_range = None):
     generator = PPTESGenerator()
     args = {
         'qubits_num': qbits, 
@@ -618,21 +638,40 @@ def generate_bennet(qbits, encoded, indx = 0, save_data_dir = 'pptes_bennet', ex
         'discord': discord,
         'start_index': indx,
         'format': format,
+        'separator_loss_range': separator_loss_range,
     }
     args['start_index'] = generator.generate_3qbits_pptes(**args, entanglement_class='BennetBE')
     return args['start_index']
 
 
+def generate_2xd(qbits, encoded, indx = 0, save_data_dir = '2xd', examples_ratio = 1., discord = False, format = 'npy', separator_loss_range = None):
+    generator = PPTESGenerator()
+    args = {
+        'qubits_num': qbits, 
+        'examples': int(examples_ratio*10000),
+        'with_permutations': True,
+        'save_data_dir': save_data_dir,
+        'randomization': True,
+        'encoded': encoded,
+        'discord': discord,
+        'start_index': indx,
+        'format': format,
+        'separator_loss_range': separator_loss_range,
+    }
+    args['start_index'] = generator.generate_2xd_pptes(**args)
+    return args['start_index']
+
+
 # ENTANGLEMENT PAPER TRAIN SETS 3/3
-def generate_mixed_reduced_train_balanced(qubits, encoded, indx = 0, ppt = True, save_data_dir = 'mixed_train_balanced', examples_ratio = 1., zero_neg = 'incl', qubits_glob = 9, discord = False, format = 'npy'):
-    new_indx = generate_mixed_reduced_train_balanced_entangled(qubits, encoded, indx, ppt, save_data_dir, examples_ratio,zero_neg, qubits_glob, discord, format)
+def generate_mixed_reduced_train_balanced(qubits, encoded, indx = 0, ppt = True, save_data_dir = 'mixed_train_balanced', examples_ratio = 1., zero_neg = 'incl', qubits_glob = 9, discord = False, format = 'npy', separator_loss_range = None):
+    new_indx = generate_mixed_reduced_train_balanced_entangled(qubits, encoded, indx, ppt, save_data_dir, examples_ratio, zero_neg, qubits_glob, discord, format, separator_loss_range)
 
     generator = MixedReducedStatesGenerator()
-    new_indx = generator.generate_circuit_matrices(int(examples_ratio*20000), qubits, qubits_glob, save_data_dir, specified_method=ReducedMethods.Separable, start_index=new_indx, encoded=encoded, discord=discord, format=format)
+    new_indx = generator.generate_circuit_matrices(int(examples_ratio*20000), qubits, qubits_glob, save_data_dir, specified_method=ReducedMethods.Separable, start_index=new_indx, encoded=encoded, discord=discord, format=format, separator_loss_range=separator_loss_range)
     return new_indx
 
 
-def generate_mixed_reduced_train_balanced_entangled(qubits, encoded, indx = 0, ppt = True, save_data_dir = 'mixed_train_balanced_entangled', examples_ratio = 1., zero_neg = 'incl', qubits_glob = 9, discord = False, format = 'npy'):
+def generate_mixed_reduced_train_balanced_entangled(qubits, encoded, indx = 0, ppt = True, save_data_dir = 'mixed_train_balanced_entangled', examples_ratio = 1., zero_neg = 'incl', qubits_glob = 9, discord = False, format = 'npy', separator_loss_range = None):
     args = {
         'qubits_num': qubits,
         'pure_state_qubits': qubits_glob,
@@ -641,6 +680,7 @@ def generate_mixed_reduced_train_balanced_entangled(qubits, encoded, indx = 0, p
         'save_data_dir': save_data_dir,
         'discord': discord,
         'format': format,
+        'separator_loss_range': separator_loss_range,
     }
 
     generator = MixedReducedStatesGenerator()
@@ -654,7 +694,7 @@ def generate_mixed_reduced_train_balanced_entangled(qubits, encoded, indx = 0, p
 
 
 # DISCORD PAPER VALIDATION SET 3/3
-def generate_mixed_reduced_val(qubits, encoded, indx = 0, save_data_dir = 'train_separable', examples_ratio = 1., qubits_glob = 9, discord = False, format = 'npy'):
+def generate_mixed_reduced_val(qubits, encoded, indx = 0, save_data_dir = 'train_separable', examples_ratio = 1., qubits_glob = 9, discord = False, format = 'npy', separator_loss_range = None):
     args = {
         'qubits_num': qubits,
         'pure_state_qubits': qubits_glob,
@@ -663,6 +703,7 @@ def generate_mixed_reduced_val(qubits, encoded, indx = 0, save_data_dir = 'train
         'save_data_dir': save_data_dir,
         'discord': discord,
         'format': format,
+        'separator_loss_range': separator_loss_range,
     }
 
     generator = MixedReducedStatesGenerator()
@@ -673,7 +714,7 @@ def generate_mixed_reduced_val(qubits, encoded, indx = 0, save_data_dir = 'train
 
 
 # DISCORD TRAIN PRODUCT EXTENSION SET 2/2
-def generate_mixed_reduced_train_product(qubits, encoded, indx = 0, save_data_dir = 'train_product', examples_ratio = 1., qubits_glob = 9, discord = False, format = 'npy'):
+def generate_mixed_reduced_train_product(qubits, encoded, indx = 0, save_data_dir = 'train_product', examples_ratio = 1., qubits_glob = 9, discord = False, format = 'npy', separator_loss_range = None):
     args = {
         'qubits_num': qubits,
         'pure_state_qubits': qubits_glob,
@@ -682,6 +723,7 @@ def generate_mixed_reduced_train_product(qubits, encoded, indx = 0, save_data_di
         'save_data_dir': save_data_dir,
         'discord': discord,
         'format': format,
+        'separator_loss_range': separator_loss_range,
     }
     
     generator = MixedReducedStatesGenerator()
@@ -692,7 +734,7 @@ def generate_mixed_reduced_train_product(qubits, encoded, indx = 0, save_data_di
 
 # ENTANGLEMENT TEST SET 2/2
 # Actual mixed test set generation method
-def generate_mixed_reduced_test(qubits, encoded, indx = 0, qubits_glob = 9, save_data_dir= 'mixed_test_val', discord = False, permute = False, format = 'npy'):
+def generate_mixed_reduced_test(qubits, encoded, indx = 0, qubits_glob = 9, save_data_dir= 'mixed_test_val', discord = False, permute = False, format = 'npy', separator_loss_range = None):
     args = {
         'qubits_num': qubits,
         'pure_state_qubits': qubits_glob,
@@ -702,6 +744,7 @@ def generate_mixed_reduced_test(qubits, encoded, indx = 0, qubits_glob = 9, save
         'discord': discord,
         'with_permutations': permute,
         'format': format,
+        'separator_loss_range': separator_loss_range,
     }
     generator = MixedReducedStatesGenerator()
     args['start_index'] = generator.generate_circuit_matrices(**args, examples=5000, specified_method=ReducedMethods.Separable)
@@ -714,7 +757,7 @@ def generate_mixed_reduced_test(qubits, encoded, indx = 0, qubits_glob = 9, save
 
 # DISCORD TEST SET 2/3
 # Verified mixed test set split into (prod, non-prod-non-discord-sep, ent)
-def generate_mixed_test_3class(qubits, encoded, indx = 0, qubits_glob = 9, save_data_dir= 'mixed_test_3c', discord = False, permute = False, format = 'npy'):
+def generate_mixed_test_3class(qubits, encoded, indx = 0, qubits_glob = 9, save_data_dir= 'mixed_test_3c', discord = False, permute = False, format = 'npy', separator_loss_range = None):
     args = {
         'qubits_num': qubits,
         'pure_state_qubits': qubits_glob,
@@ -724,6 +767,7 @@ def generate_mixed_test_3class(qubits, encoded, indx = 0, qubits_glob = 9, save_
         'discord': discord,
         'with_permutations': permute,
         'format': format,
+        'separator_loss_range': separator_loss_range,
     }
 
     generator = MixedReducedStatesGenerator()
@@ -743,67 +787,67 @@ def generate_mixed_test_3class(qubits, encoded, indx = 0, qubits_glob = 9, save_
 
 # ENTANGLEMENT PAPER TRAIN SETS (WEAKLY LABELED - label_ppt = True, zero_neg = 'incl', NEGATIVITY LABELED - label_ppt = False, zero_neg = 'incl', NO PPTES - label_ppt = False, zero_neg = 'none')
 # FOR VALIDATION THE SAME AS FOR NOPPTES with examples_ratio = 0.1
-def generate_train_balanced(qbits, encoded, indx = 0, label_ppt = True, save_data_dir = 'train_balanced', examples_ratio = 1., max_num_ps = None, zero_neg = 'incl', qubits_glob = 9, biseparable = False, format = 'npy'):
-    new_indx = generate_pure_train_balanced(qbits, encoded, indx, save_data_dir, examples_ratio, max_num_ps, biseparable=biseparable, zero_neg=zero_neg, label_potent_ppt=label_ppt, format=format)
-    new_indx = generate_mixed_def_train_balanced(qbits, encoded, new_indx, save_data_dir, examples_ratio, max_num_ps, biseparable=biseparable, zero_neg=zero_neg, label_potent_ppt=label_ppt, format=format)
-    new_indx = generate_mixed_reduced_train_balanced(qbits, encoded, new_indx, ppt = label_ppt, save_data_dir = save_data_dir, examples_ratio = examples_ratio, zero_neg= zero_neg, qubits_glob=qubits_glob, format=format)
+def generate_train_balanced(qbits, encoded, indx = 0, label_ppt = True, save_data_dir = 'train_balanced', examples_ratio = 1., max_num_ps = None, zero_neg = 'incl', qubits_glob = 9, biseparable = False, format = 'npy', separator_loss_range = None):
+    new_indx = generate_pure_train_balanced(qbits, encoded, indx, save_data_dir, examples_ratio, max_num_ps, biseparable=biseparable, zero_neg=zero_neg, label_potent_ppt=label_ppt, format=format, separator_loss_range=separator_loss_range)
+    new_indx = generate_mixed_def_train_balanced(qbits, encoded, new_indx, save_data_dir, examples_ratio, max_num_ps, biseparable=biseparable, zero_neg=zero_neg, label_potent_ppt=label_ppt, format=format, separator_loss_range=separator_loss_range)
+    new_indx = generate_mixed_reduced_train_balanced(qbits, encoded, new_indx, ppt = label_ppt, save_data_dir = save_data_dir, examples_ratio = examples_ratio, zero_neg= zero_neg, qubits_glob=qubits_glob, format=format, separator_loss_range=separator_loss_range)
     return new_indx
 
 
 # to verify if training on discord states is better
-def generate_train_discordant(qbits, encoded, indx = 0, label_ppt = False, save_data_dir = 'train_discordant', examples_ratio = 1., max_num_ps = None, zero_neg = 'incl', qubits_glob = 9, biseparable = False, format = 'npy', discord = False):
-    new_indx = generate_mixed_def_train_discordant(qbits, encoded, indx, save_data_dir, examples_ratio, discord=discord, max_num_ps=max_num_ps, zero_neg=zero_neg, biseparable=biseparable, label_potent_ppt=label_ppt, format=format)
-    new_indx = generate_mixed_reduced_train_balanced_entangled(qbits, encoded, new_indx, ppt = label_ppt, save_data_dir = save_data_dir, examples_ratio = examples_ratio, zero_neg= zero_neg, qubits_glob=qubits_glob, discord=discord, format=format)
+def generate_train_discordant(qbits, encoded, indx = 0, label_ppt = False, save_data_dir = 'train_discordant', examples_ratio = 1., max_num_ps = None, zero_neg = 'incl', qubits_glob = 9, biseparable = False, format = 'npy', discord = False, separator_loss_range = None):
+    new_indx = generate_mixed_def_train_discordant(qbits, encoded, indx, save_data_dir, examples_ratio, discord=discord, max_num_ps=max_num_ps, zero_neg=zero_neg, biseparable=biseparable, label_potent_ppt=label_ppt, format=format, separator_loss_range=separator_loss_range)
+    new_indx = generate_mixed_reduced_train_balanced_entangled(qbits, encoded, new_indx, ppt = label_ppt, save_data_dir = save_data_dir, examples_ratio = examples_ratio, zero_neg= zero_neg, qubits_glob=qubits_glob, discord=discord, format=format, separator_loss_range=separator_loss_range)
     return new_indx
 
 
 # DISCORD PAPER FULL TRAIN SEPARABLE SET
-def generate_full_train_separable(qbits, encoded, indx = 0, save_data_dir = 'train_separable', examples_ratio = 1., discord = False, qubits_glob = 9, format = 'npy'):
+def generate_full_train_separable(qbits, encoded, indx = 0, save_data_dir = 'train_separable', examples_ratio = 1., discord = False, qubits_glob = 9, format = 'npy', separator_loss_range = None):
     # Pure separable
-    indx = generate_pure_only_train_separable(qbits, encoded, indx = indx, save_data_dir = save_data_dir, examples_ratio = examples_ratio, discord = discord, format=format)
-    indx = generate_parametrized(qbits, encoded, indx = indx, save_data_dir = save_data_dir, examples = int(examples_ratio*30000), discord = discord, separable = True, pure = True, format=format)
+    indx = generate_pure_only_train_separable(qbits, encoded, indx = indx, save_data_dir = save_data_dir, examples_ratio = examples_ratio, discord = discord, format=format, separator_loss_range=separator_loss_range)
+    indx = generate_parametrized(qbits, encoded, indx = indx, save_data_dir = save_data_dir, examples = int(examples_ratio*30000), discord = discord, separable = True, pure = True, format=format, separator_loss_range=separator_loss_range)
     # Product
-    indx = generate_mixed_def_train_product(qbits, encoded, indx = indx, save_data_dir = save_data_dir, examples_ratio = examples_ratio, discord = discord, format=format)
-    indx = generate_mixed_reduced_train_product(qbits, encoded, indx = indx, save_data_dir = save_data_dir, examples_ratio = examples_ratio, discord = discord, qubits_glob = qubits_glob, format=format)
+    indx = generate_mixed_def_train_product(qbits, encoded, indx = indx, save_data_dir = save_data_dir, examples_ratio = examples_ratio, discord = discord, format=format, separator_loss_range=separator_loss_range)
+    indx = generate_mixed_reduced_train_product(qbits, encoded, indx = indx, save_data_dir = save_data_dir, examples_ratio = examples_ratio, discord = discord, qubits_glob = qubits_glob, format=format, separator_loss_range=separator_loss_range)
     # Zero discord
-    indx = generate_non_product_zero_discord(qbits, encoded, indx = indx, save_data_dir = save_data_dir, examples_ratio = 10*examples_ratio, discord = discord, format=format)
+    indx = generate_non_product_zero_discord(qbits, encoded, indx = indx, save_data_dir = save_data_dir, examples_ratio = 10*examples_ratio, discord = discord, format=format, separator_loss_range=separator_loss_range)
     # Mixed separable
-    indx  = generate_discordant_separable(qbits, encoded, indx = indx, save_data_dir = save_data_dir, examples_ratio = 6*examples_ratio, discord = discord, format=format)
+    indx  = generate_discordant_separable(qbits, encoded, indx = indx, save_data_dir = save_data_dir, examples_ratio = 6*examples_ratio, discord = discord, format=format, separator_loss_range=separator_loss_range)
     return indx
 
 
 # DISCORD PAPER TRAIN NON PRODUCT SEPARABLE SET
-def generate_train_non_product_separable(qbits, encoded, indx = 0, save_data_dir = 'train_non_product_separable', examples_ratio = 1., discord = False, format = 'npy'):
-    indx = generate_non_product_zero_discord(qbits, encoded, indx = indx, save_data_dir = save_data_dir, examples_ratio = 20*examples_ratio, discord = discord, format=format)
-    indx = generate_discordant_separable(qbits, encoded, indx = indx, save_data_dir = save_data_dir, examples_ratio = 8*examples_ratio, discord = discord, format=format)
+def generate_train_non_product_separable(qbits, encoded, indx = 0, save_data_dir = 'train_non_product_separable', examples_ratio = 1., discord = False, format = 'npy', separator_loss_range = None):
+    indx = generate_non_product_zero_discord(qbits, encoded, indx = indx, save_data_dir = save_data_dir, examples_ratio = 20*examples_ratio, discord = discord, format=format, separator_loss_range=separator_loss_range)
+    indx = generate_discordant_separable(qbits, encoded, indx = indx, save_data_dir = save_data_dir, examples_ratio = 8*examples_ratio, discord = discord, format=format, separator_loss_range=separator_loss_range)
     return indx
 
 
 # DISCORD PAPER VALIDATION SET WITH examples_ratio = 0.1
-def generate_train_separable(qbits, encoded, indx = 0, save_data_dir = 'train_separable', examples_ratio = 1., discord = False, qubits_glob = 9, format = 'npy'):
-    new_indx = generate_pure_only_train_separable(qbits, encoded, indx, save_data_dir, examples_ratio, discord, format=format)
-    new_indx = generate_mixed_def_train_separable(qbits, encoded, new_indx, save_data_dir, examples_ratio, discord, biseparable=False, format=format)
-    new_indx = generate_mixed_reduced_val(qbits, encoded, new_indx, save_data_dir, examples_ratio, qubits_glob, discord, format=format)
+def generate_train_separable(qbits, encoded, indx = 0, save_data_dir = 'train_separable', examples_ratio = 1., discord = False, qubits_glob = 9, format = 'npy', separator_loss_range = None):
+    new_indx = generate_pure_only_train_separable(qbits, encoded, indx, save_data_dir, examples_ratio, discord, format=format, separator_loss_range=separator_loss_range)
+    new_indx = generate_mixed_def_train_separable(qbits, encoded, new_indx, save_data_dir, examples_ratio, discord, biseparable=False, format=format, separator_loss_range=separator_loss_range)
+    new_indx = generate_mixed_reduced_val(qbits, encoded, new_indx, save_data_dir, examples_ratio, qubits_glob, discord, format=format, separator_loss_range=separator_loss_range)
     return new_indx
 
 
 # DISCORD PAPER TRAIN PRODUCT EXTENSION FOR TRAIN PURE SEPARABLE SET
-def generate_train_mixed_product(qbits, encoded, indx = 0, save_data_dir = 'train_mixed_product', examples_ratio = 1., discord = False, qubits_glob = 9, format = 'npy'):
-    new_indx = generate_mixed_def_train_product(qbits, encoded, indx, save_data_dir, examples_ratio, discord, biseparable=False, format=format)
-    new_indx = generate_mixed_reduced_train_product(qbits, encoded, new_indx, save_data_dir, examples_ratio, qubits_glob, discord, format=format)
+def generate_train_mixed_product(qbits, encoded, indx = 0, save_data_dir = 'train_mixed_product', examples_ratio = 1., discord = False, qubits_glob = 9, format = 'npy', separator_loss_range = None):
+    new_indx = generate_mixed_def_train_product(qbits, encoded, indx, save_data_dir, examples_ratio, discord, biseparable=False, format=format, separator_loss_range=separator_loss_range)
+    new_indx = generate_mixed_reduced_train_product(qbits, encoded, new_indx, save_data_dir, examples_ratio, qubits_glob, discord, format=format, separator_loss_range=separator_loss_range)
     return new_indx
 
 
 # ENTANGLEMENT PAPER MIXED TEST SET
-def generate_mixed_test_set(qbits, encoded, indx = 0, qubits_glob = 9, save_data_dir = 'mixed_test_val', max_num_ps = None, discord = False, permute = False, format = 'npy'):
-    new_indx = generate_mixed_test_def(qbits, encoded, indx, save_data_dir, max_num_ps, discord, permute, format)
-    new_indx = generate_mixed_reduced_test(qbits, encoded, new_indx, qubits_glob, save_data_dir, discord, permute, format)
+def generate_mixed_test_set(qbits, encoded, indx = 0, qubits_glob = 9, save_data_dir = 'mixed_test_val', max_num_ps = None, discord = False, permute = False, format = 'npy', separator_loss_range = None):
+    new_indx = generate_mixed_test_def(qbits, encoded, indx, save_data_dir, max_num_ps, discord, permute, format, separator_loss_range)
+    new_indx = generate_mixed_reduced_test(qbits, encoded, new_indx, qubits_glob, save_data_dir, discord, permute, format, separator_loss_range)
     return new_indx
 
 
 # DISCORD PAPER MIXED TEST SET
-def generate_mixed_balanced_test_set(qbits, encoded, indx = 0, qubits_glob = 9, save_data_dir = 'mixed_test_bal', max_num_ps = None, discord = False, permute = False, format = 'npy'):
-    new_indx = generate_mixed_test_def(qbits, encoded, indx, save_data_dir, max_num_ps, discord, permute, format)
-    new_indx = generate_mixed_test_3class(qbits, encoded, new_indx, qubits_glob, save_data_dir, discord, permute, format)
-    new_indx = generate_non_product_zero_discord(qbits, encoded, new_indx, save_data_dir, examples_ratio=1.5, discord=discord, max_num_ps=max_num_ps, format=format)
+def generate_mixed_balanced_test_set(qbits, encoded, indx = 0, qubits_glob = 9, save_data_dir = 'mixed_test_bal', max_num_ps = None, discord = False, permute = False, format = 'npy', separator_loss_range = None):
+    new_indx = generate_mixed_test_def(qbits, encoded, indx, save_data_dir, max_num_ps, discord, permute, format, separator_loss_range)
+    new_indx = generate_mixed_test_3class(qbits, encoded, new_indx, qubits_glob, save_data_dir, discord, permute, format, separator_loss_range)
+    new_indx = generate_non_product_zero_discord(qbits, encoded, new_indx, save_data_dir, examples_ratio=1.5, discord=discord, max_num_ps=max_num_ps, format=format, separator_loss_range=separator_loss_range)
     return new_indx
