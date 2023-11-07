@@ -44,15 +44,15 @@ horodecki_root_dir = './datasets/3qbits/horodecki_test/matrices/'
 bennet_dictionary_path = './datasets/3qbits/bennet_test/negativity_bipartitions.txt'
 bennet_root_dir = './datasets/3qbits/bennet_test/matrices/'
 
-results_dir = './results/3qbits/multi_class_siam_20/nopptes_bisep/'
-model_dir = './models/3qbits/multi_class_siam_20/nopptes_bisep/'
+results_dir = './results/3qbits/multi_class_siam/no_pptes_bisep_560/'
+model_dir = './models/3qbits/multi_class_siam/no_pptes_bisep_560/'
 model_name = 'weights05_ep10_class_best_val_loss_{}'
 
-# thresholds = [0., 5.e-4, 1.e-3, 2.e-3, 5.e-3, 1.e-2, 2.e-2, 5.e-2]
+thresholds = [0., 5.e-4, 1.e-3, 2.e-3, 5.e-3, 1.e-2, 2.e-2, 5.e-2]
 
 # thresholds = [0., 1.e-3, 1.e-1]
-thresholds = np.geomspace(0.001, 0.1, 20)
-thresholds = np.insert(thresholds, 0, 0.)
+# thresholds = np.geomspace(0.001, 0.1, 20)
+# thresholds = np.insert(thresholds, 0, 0.)
 
 batch_size = 128
 batch_interval = 800
@@ -62,7 +62,7 @@ sep_fc_num = 4
 epoch_num = 20
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
-train_dataset = BipartitionMatricesDataset(train_dictionary_path, train_root_dir, 0.0001)
+train_dataset = BipartitionMatricesDataset(train_dictionary_path, train_root_dir, 0.0001, data_limit=560000)
 val_dataset = BipartitionMatricesDataset(val_dictionary_path, val_root_dir, 0.0001)
 val_2xd = BipartitionMatricesDataset(val_2xd_dictionary_path, val_2xd_root_dir, 0.0001)
 test_mixed_dataset = BipartitionMatricesDataset(mixed_dictionary_path, mixed_root_dir, 0.0001)
@@ -164,7 +164,7 @@ for i in range(len(thresholds) - 1):
             # val_loss, val_acc = test(model, device, val_loader, criterion, "Validation data set", bipart=True)
             val_loss, val_acc = test_vector_siamese(model, device, val_loader, criterion, "Validation data set", bipart='separate', negativity_ext=False, low_thresh=0.5, high_thresh=0.5, decision_point=0.5, balanced_acc=False)
         if eval_flags['val_2xd']:
-            # val_loss, val_acc = test(model, device, val_loader, criterion, "Validation data set", bipart=True)
+            # val_2xd_loss, val_2xd_acc = test(model, device, val_2xd_loader, criterion, "Validation 2xd data set", bipart=True)
             val_2xd_loss, val_2xd_acc = test_vector_siamese(model, device, val_2xd_loader, criterion, "Validation 2xd data set", bipart='separate', negativity_ext=False, low_thresh=0.5, high_thresh=0.5, decision_point=0.5, balanced_acc=False)
         if eval_flags['mixed']:
             # mixed_loss, mixed_acc = test(model, device, test_mixed_loader, criterion, "Mixed data set", bipart=True)

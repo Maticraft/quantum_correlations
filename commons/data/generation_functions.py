@@ -164,6 +164,7 @@ def generate_parametrized(qbits, encoded, indx = 0, save_data_dir = 'parametrize
     
                 
 # ENTANGLEMENT TRAIN SET 1/3 (SAME FOR ALL 3 DATASETS)
+# 40 000 separable pure states + 60 000 entangled pure state + 20 000 biseparable pure states
 def generate_pure_train_balanced(qubits, encoded, indx = 0, save_data_dir = 'pure_train_balanced', examples_ratio = 1., max_num_ps = None, discord = False, biseparable = False, zero_neg = 'none', label_potent_ppt = False, format = 'npy', separator_loss_range = None):
     args = {
         'qubits_num': qubits,
@@ -193,6 +194,7 @@ def generate_pure_train_balanced(qubits, encoded, indx = 0, save_data_dir = 'pur
 
 
 # ENTANGLEMENT TRAIN SET 2/3
+# 100 000 random mixed states + 140 000 separable mixed states + 120 000 biseparable mixed states
 def generate_mixed_def_train_balanced(qubits, encoded, indx = 0, save_data_dir = 'mixed_def_train_balanced', examples_ratio = 1., max_num_ps = None, discord = False, biseparable = False, zero_neg = 'none', label_potent_ppt = False, format = 'npy', separator_loss_range = None):
     args = {
         'qubits_num': qubits,
@@ -528,7 +530,7 @@ def generate_discordant_separable(qubits, encoded, indx = 0, save_data_dir = 'ds
     return args['start_index']
 
 
-def generate_pseudo_acin_pptes(qubits, encoded, indx = 0, qubits_glob = 9, save_data_dir = 'pseudo_acin_pptes', examples_ratio = 1., discord = False, zero_neg = 'incl', label_potent_ppt = True, format = 'npy', separator_loss_range = None):
+def generate_max_rank_weak_pptes(qubits, encoded, indx = 0, qubits_glob = 9, save_data_dir = 'max_rank_weak_pptes', examples_ratio = 1., discord = False, zero_neg = 'incl', label_potent_ppt = True, format = 'npy', separator_loss_range = None):
     generator = MixedReducedStatesGenerator()
     args = {
         'qubits_num': qubits,
@@ -663,6 +665,7 @@ def generate_2xd(qbits, encoded, indx = 0, save_data_dir = '2xd', examples_ratio
 
 
 # ENTANGLEMENT PAPER TRAIN SETS 3/3
+# 60 000 entangled mixed reduced + 20 000 separable mixed reduced
 def generate_mixed_reduced_train_balanced(qubits, encoded, indx = 0, ppt = True, save_data_dir = 'mixed_train_balanced', examples_ratio = 1., zero_neg = 'incl', qubits_glob = 9, discord = False, format = 'npy', separator_loss_range = None):
     new_indx = generate_mixed_reduced_train_balanced_entangled(qubits, encoded, indx, ppt, save_data_dir, examples_ratio, zero_neg, qubits_glob, discord, format, separator_loss_range)
 
