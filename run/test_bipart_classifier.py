@@ -16,9 +16,15 @@ from commons.test_utils.siamese import test_vector_siamese
 from commons.pytorch_utils import save_acc
 
 siamese_flag = False
+verified_dataset = True
 
-train_dictionary_path = './datasets/3qbits/train_bisep_no_pptes/negativity_bipartitions.txt'
-train_root_dir = './datasets/3qbits/train_bisep_no_pptes/matrices/'
+if verified_dataset:
+    train_dictionary_path = './datasets/3qbits/train_bisep_no_pptes/negativity_bipartitions.txt'
+    train_root_dir = './datasets/3qbits/train_bisep_no_pptes/matrices/'
+else:
+    train_dictionary_path = './datasets/3qbits/train_bisep_negativity_labeled/negativity_bipartitions.txt'
+    train_root_dir = './datasets/3qbits/train_bisep_negativity_labeled/matrices/'
+
 
 val_dictionary_path = './datasets/3qbits/val_bisep_no_pptes/negativity_bipartitions.txt'
 val_root_dir = './datasets/3qbits/val_bisep_no_pptes/matrices/'
@@ -47,9 +53,12 @@ ghz_root_dir = './datasets/3qbits/ghz_test/matrices/'
 w_dictionary_path = './datasets/3qbits/w_test/negativity_bipartitions.txt'
 w_root_dir = './datasets/3qbits/w_test/matrices/'
 
-results_dir = './results/3qbits/nopptes_bisep_test/'
-
-model_dir = './models/3qbits/nopptes_bisep/'
+if verified_dataset:
+    results_dir = './results/3qbits/nopptes_bisep_test/'
+    model_dir = './models/3qbits/nopptes_bisep/'
+else:
+    results_dir = './results/3qbits/negativity_bisep_test/'
+    model_dir = './models/3qbits/negativity_bisep/'
 
 if siamese_flag:
     model_name = 'siam_cnn_class_best_val_paper'

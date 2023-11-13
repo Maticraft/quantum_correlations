@@ -21,8 +21,14 @@ import torch
 from torch.utils.data import DataLoader
 
 
-train_dictionary_path = './datasets/3qbits/train_bisep_no_pptes/negativity_bipartitions.txt'
-train_root_dir = './datasets/3qbits/train_bisep_no_pptes/matrices/'
+verified_dataset = True
+
+if verified_dataset:
+    train_dictionary_path = './datasets/3qbits/train_bisep_no_pptes/negativity_bipartitions.txt'
+    train_root_dir = './datasets/3qbits/train_bisep_no_pptes/matrices/'
+else:
+    train_dictionary_path = './datasets/3qbits/train_bisep_negativity_labeled/negativity_bipartitions.txt'
+    train_root_dir = './datasets/3qbits/train_bisep_negativity_labeled/matrices/'
 
 separator_path = './models/3qbits/FancySeparator_l1_all_sep_o48_fc4_bl.pt'
 
@@ -44,8 +50,13 @@ horodecki_root_dir = './datasets/3qbits/horodecki_test/matrices/'
 bennet_dictionary_path = './datasets/3qbits/bennet_test/negativity_bipartitions.txt'
 bennet_root_dir = './datasets/3qbits/bennet_test/matrices/'
 
-results_dir = './results/3qbits/multi_class_siam/no_pptes_bisep/'
-model_dir = './models/3qbits/multi_class_siam/no_pptes_bisep/'
+if verified_dataset:
+    model_dir = './models/3qbits/multi_class_siam_eq_log_10/no_pptes_bisep/'
+    results_dir = './results/3qbits/multi_class_siam_eq_log_10/no_pptes_bisep/'
+else:
+    model_dir = './models/3qbits/multi_class_siam_eq_log_10/negativity_bisep/'
+    results_dir = './results/3qbits/multi_class_siam_eq_log_10/negativity_bisep/'
+    
 model_name = 'weights05_ep10_class_best_val_loss_{}'
 
 thresholds = [0., 1.e-4, 2.e-4, 5.e-4, 1.e-3, 2.e-3, 5.e-3, 1.e-2, 2.e-2, 5.e-2, 1.e-1]

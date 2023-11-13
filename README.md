@@ -1,30 +1,25 @@
 Repository for quantum correlations investigation with the usage of neural networks.
 
-
-Entanglement Datasets:
-- Test:
-    - pure_test
-    - mixed_test_ext / mixed_test_val
-    - pptes_2xd
-    - pptes_acin100
-    - pptes_bennet
-- Train:
-    - train_balanced_nopptes_ext
-    - train_balanced_wks_ne
-    - train_balanced_wks_ne_true
-- Val
-    - val_balanced? val_mixed
+To generate datasets run:
+```
+python3 run/data/generate_datasets.py
+```
+with parameters of your choice specified inside the file (e.g. for paper "IdentifiIdentification of quantum entanglement with Siamese convolutional neural networks and semi-supervised learning", set flag paper ='entanglement', and for "Data-driven criteria for quantum correlations" set paper = 'discord')
 
 
-Discord Datasets:
-- Test:
-    - pure_test
-    - mixed_test_balanced_disc
-- Val:
-    - val_separable
-- Train:
-    - train_pure_separable
-    - train_product
-    - train_zd
-    - train_sep
-    - train_non_product
+To evaluate the models run:
+For CNN and Siamese CNN from entanglement paper:
+```
+python3 run/test_bipart_classifier.py
+```
+with siamese_flag set appropriately. If evaluating on verified dataset set verified_dataset = True, if evaluating on negativity labeled dataset set it to False.
+
+For ensemble model from entanglement paper:
+```
+python3 run/test_multi_bipart_classifier.py
+```
+with verified_dataset flag set adequately.
+
+
+To train the models use scripts:
+run/train_bipart_classifier.py and run/train_multi_bipart_classifier.py with parameters set appropriately.

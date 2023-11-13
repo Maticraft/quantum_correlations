@@ -19,8 +19,15 @@ from torch.utils.data import DataLoader
 
 from commons.pytorch_utils import save_acc
 
-train_dictionary_path = './datasets/3qbits/train_bisep_no_pptes/negativity_bipartitions.txt'
-train_root_dir = './datasets/3qbits/train_bisep_no_pptes/matrices/'
+siamese_flag = False
+verified_dataset = True
+
+if verified_dataset:
+    train_dictionary_path = './datasets/3qbits/train_bisep_no_pptes/negativity_bipartitions.txt'
+    train_root_dir = './datasets/3qbits/train_bisep_no_pptes/matrices/'
+else:
+    train_dictionary_path = './datasets/3qbits/train_bisep_negativity_labeled/negativity_bipartitions.txt'
+    train_root_dir = './datasets/3qbits/train_bisep_negativity_labeled/matrices/'
 
 val_dictionary_path = './datasets/3qbits/val_bisep_no_pptes/negativity_bipartitions.txt'
 val_root_dir = './datasets/3qbits/val_bisep_no_pptes/matrices/'
@@ -40,9 +47,19 @@ horodecki_root_dir = f'./datasets/3qbits/horodecki_test/matrices/'
 bennet_dictionary_path = f'./datasets/3qbits/bennet_test/negativity_bipartitions.txt'
 bennet_root_dir = f'./datasets/3qbits/bennet_test/matrices/'
 
-results_dir = './results/3qbits/nopptes_bisep_560/'
-model_dir = './models/3qbits/nopptes_bisep_560/'
-model_name = 'cnn_class_best_val_paper'
+if verified_dataset:
+    results_dir = './results/3qbits/nopptes_bisep_test/'
+    model_dir = './models/3qbits/nopptes_bisep/'
+else:
+    results_dir = './results/3qbits/negativity_bisep_test/'
+    model_dir = './models/3qbits/negativity_bisep/'
+
+if siamese_flag:
+    model_name = 'siam_cnn_class_best_val_paper'
+    results_file = 'siam_cnn_class_best_val_paper.txt'
+else:
+    model_name = 'cnn_class_best_val_paper'
+    results_file = 'cnn_class_best_val_paper.txt'
 
 batch_size = 128
 batch_interval = 800
@@ -77,9 +94,13 @@ test_bennet_loader = DataLoader(test_bennet_dataset, batch_size=batch_size, shuf
 
 # model = FancySeparatorEnsembleClassifier(qbits_num, sep_ch, sep_fc_num, train_dataset.bipart_num, 3)
 # model = FancyClassifier(qbits_num, sep_ch, sep_fc_num, 5, train_dataset.bipart_num, 128)
-model = CNN(qbits_num, train_dataset.bipart_num, 3, 5, 2, 16, ratio_type='sqrt', mode='classifier')
 # model = EigvalsClassifier(qbits_num, train_dataset.bipart_num, input_channels=2, fc_num=10, linear_transforms=128, hidden_size=1024)
-# model = VectorSiamese(qbits_num, train_dataset.bipart_num, 3, 5, 2, 16, ratio_type='sqrt', mode='classifier', biparts_mode='all')
+
+if siamese_flag:
+    model = VectorSiamese(qbits_num, train_dataset.bipart_num, 3, 5, 2, 16, ratio_type='sqrt', mode='classifier', biparts_mode='all')
+else:
+    model = CNN(qbits_num, train_dataset.bipart_num, 3, 5, 2, 16, ratio_type='sqrt', mode='classifier')
+
 model.double()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 criterion = torch.nn.BCELoss()
