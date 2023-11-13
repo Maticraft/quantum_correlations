@@ -4,11 +4,12 @@
 /datasets_tomography
 /plots
 /results
+/models
+
 *.json
 *.txt
 *.png
 *.csv
-*.pt
 *.np
 *.pkl
 *.ipynb

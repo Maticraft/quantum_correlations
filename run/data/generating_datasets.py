@@ -38,7 +38,7 @@ if paper == 'discord':
     _ = generate_mixed_balanced_test_set(qbits, encoded, indx = 0, save_data_dir = 'mixed_test_bal', max_num_ps = None, discord = True, permute = False, format=format)
 
 if paper == 'entanglement':
-        # Generate train sets
+    # Generate train sets
     _ = generate_train_balanced(qbits, encoded, indx = 0, label_ppt = False, save_data_dir = 'train_bisep_negativity_labeled', examples_ratio = 1., max_num_ps = None, zero_neg = 'incl', qubits_glob = 9, biseparable=True, format=format)
     _ = generate_train_balanced(qbits, encoded, indx = 0, label_ppt = False, save_data_dir = 'train_bisep_no_pptes', examples_ratio = 1., max_num_ps = None, zero_neg = 'none', qubits_glob = 9, biseparable=True, format=format)
     _ = generate_max_rank_weak_pptes(qbits, encoded, indx = 1150000, save_data_dir = 'train_bisep_no_pptes', qubits_glob=9, zero_neg='incl') # substitute indx with correct one after generating the train_bisep_no_pptes dataset
@@ -47,9 +47,11 @@ if paper == 'entanglement':
     _ = generate_train_balanced(qbits, encoded, indx = 0, label_ppt = False, save_data_dir = 'val_bisep_no_pptes', examples_ratio = 0.1, max_num_ps = None, zero_neg = 'none', qubits_glob = 9, biseparable=True, format=format)
     _ = generate_2xd(qbits, encoded, indx = 0, save_data_dir = 'val_2xd', examples_ratio = 1., discord=True, format=format)
 
-    # # Generate test sets
+    # Generate test sets
     _ = generate_pure_test(qbits, encoded, indx = 0, save_data_dir = 'pure_test', format=format)
     _ = generate_mixed_test_set(qbits, encoded, indx = 0, save_data_dir = 'mixed_test', format=format)
     _ = generate_acin(qbits, encoded, indx = 0, save_data_dir = 'acin_test', format=format)
     _ = generate_horodecki(qbits, encoded, indx = 0, save_data_dir = 'horodecki_test', format=format)
     _ = generate_bennet(qbits, encoded, indx = 0, save_data_dir = 'bennet_test', format=format)
+    _ = generate_ghz(qbits, encoded, indx = 0, save_data_dir = 'ghz_test', format=format)
+    _ = generate_w(qbits, encoded, indx = 0, save_data_dir = 'w_test', format=format)

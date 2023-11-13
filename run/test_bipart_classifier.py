@@ -15,6 +15,8 @@ from commons.test_utils.base import test
 from commons.test_utils.siamese import test_vector_siamese
 from commons.pytorch_utils import save_acc
 
+siamese_flag = False
+
 train_dictionary_path = './datasets/3qbits/train_bisep_no_pptes/negativity_bipartitions.txt'
 train_root_dir = './datasets/3qbits/train_bisep_no_pptes/matrices/'
 
@@ -39,13 +41,23 @@ bennet_root_dir = './datasets/3qbits/bennet_test/matrices/'
 biseparable_dictionary_path = './datasets/3qbits/biseparable_test/negativity_bipartitions.txt'
 biseparable_root_dir = './datasets/3qbits/biseparable_test/matrices/'
 
-results_dir = './results/3qbits/nopptes_bisep_560_test/'
-results_file = 'cnn_class_best_val_paper.txt'
+ghz_dictionary_path = './datasets/3qbits/ghz_test/negativity_bipartitions.txt'
+ghz_root_dir = './datasets/3qbits/ghz_test/matrices/'
 
-model_dir = './models/3qbits/nopptes_bisep_560/'
-model_name = 'cnn_class_best_val_paper'
+w_dictionary_path = './datasets/3qbits/w_test/negativity_bipartitions.txt'
+w_root_dir = './datasets/3qbits/w_test/matrices/'
 
-siamese_flag = False
+results_dir = './results/3qbits/nopptes_bisep_test/'
+
+model_dir = './models/3qbits/nopptes_bisep/'
+
+if siamese_flag:
+    model_name = 'siam_cnn_class_best_val_paper'
+    results_file = 'siam_cnn_class_best_val_paper.txt'
+else:
+    model_name = 'cnn_class_best_val_paper'
+    results_file = 'cnn_class_best_val_paper.txt'
+
 
 batch_size = 128
 batch_interval = 800
@@ -78,6 +90,12 @@ test_bennet_loader = DataLoader(test_bennet_dataset, batch_size=batch_size, shuf
 test_biseparable_dataset = BipartitionMatricesDataset(biseparable_dictionary_path, biseparable_root_dir, 0.0001)
 test_biseparable_loader = DataLoader(test_biseparable_dataset, batch_size=batch_size, shuffle=True)
 
+test_ghz_dataset = BipartitionMatricesDataset(ghz_dictionary_path, ghz_root_dir, 0.0001)
+test_ghz_loader = DataLoader(test_ghz_dataset, batch_size=batch_size, shuffle=True)
+
+test_w_dataset = BipartitionMatricesDataset(w_dictionary_path, w_root_dir, 0.0001)
+test_w_loader = DataLoader(test_w_dataset, batch_size=batch_size, shuffle=True)
+
 os.makedirs(results_dir, exist_ok=True)
 os.makedirs(model_dir, exist_ok=True)
 
@@ -86,15 +104,18 @@ results_path = results_dir + results_file
 
 # model = FancySeparatorEnsembleClassifier(qbits_num, sep_ch, sep_fc_num, train_dataset.bipart_num, 3)
 # model = FancyClassifier(qbits_num, sep_ch, sep_fc_num, 5, train_dataset.bipart_num, 128)
-model = CNN(qbits_num, train_dataset.bipart_num, 3, 5, 2, 16, ratio_type='sqrt', mode='classifier')
-# model = VectorSiamese(qbits_num, train_dataset.bipart_num, 3, 5, 2, 16, ratio_type='sqrt', mode='classifier', biparts_mode='all')
+if siamese_flag:
+    model = VectorSiamese(qbits_num, train_dataset.bipart_num, 3, 5, 2, 16, ratio_type='sqrt', mode='classifier', biparts_mode='all')
+else:
+    model = CNN(qbits_num, train_dataset.bipart_num, 3, 5, 2, 16, ratio_type='sqrt', mode='classifier')
+
 model.double()
 model.load_state_dict(torch.load(model_path))
 print('Model loaded')
 
 criterion = torch.nn.BCELoss()
 
-save_acc(results_path, '', ['Train loss', 'Train_acc', 'Validation loss', 'Validation accuracy', 'Pure loss', 'Pure accuracy', 'Mixed loss', 'Mixed accuracy', 'ACIN loss', 'ACIN accuracy', 'Horodecki loss', 'Horodecki accuracy', 'Bennet loss', 'Bennet accuracy', 'Bisep loss', 'Bisep accuracy'], write_mode='w')
+save_acc(results_path, '', ['Train loss', 'Train_acc', 'Validation loss', 'Validation accuracy', 'Pure loss', 'Pure accuracy', 'Mixed loss', 'Mixed accuracy', 'ACIN loss', 'ACIN accuracy', 'Horodecki loss', 'Horodecki accuracy', 'Bennet loss', 'Bennet accuracy', 'Bisep loss', 'Bisep accuracy', 'GHZ loss', 'GHZ accuracy', 'W loss', 'W accuracy'], write_mode='w')
 
 if siamese_flag:
     train_loss, train_acc = test_vector_siamese(model, device, train_loader, criterion, "Train data set", bipart='separate', negativity_ext=False, low_thresh=0.5, high_thresh=0.5, decision_point=0.5, balanced_acc=False)
@@ -105,6 +126,8 @@ if siamese_flag:
     horodecki_loss, horodecki_acc = test_vector_siamese(model, device, test_horodecki_loader, criterion, "Horodecki data set", bipart='separate', negativity_ext=False, low_thresh=0.5, high_thresh=0.5, decision_point=0.5, balanced_acc=False)
     bennet_loss, bennet_acc = test_vector_siamese(model, device, test_bennet_loader, criterion, "Bennet data set", bipart='separate', negativity_ext=False, low_thresh=0.5, high_thresh=0.5, decision_point=0.5, balanced_acc=False)
     bisep_loss, bisep_acc = test_vector_siamese(model, device, test_biseparable_loader, criterion, "Biseparable data set", bipart='separate', negativity_ext=False, low_thresh=0.5, high_thresh=0.5, decision_point=0.5, balanced_acc=False)
+    ghz_loss, ghz_acc = test_vector_siamese(model, device, test_ghz_loader, criterion, "GHZ data set", bipart='separate', negativity_ext=False, low_thresh=0.5, high_thresh=0.5, decision_point=0.5, balanced_acc=False)
+    w_loss, w_acc = test_vector_siamese(model, device, test_w_loader, criterion, "W data set", bipart='separate', negativity_ext=False, low_thresh=0.5, high_thresh=0.5, decision_point=0.5, balanced_acc=False)
 else:
     train_loss, train_acc = test(model, device, train_loader, criterion, "Train data set", bipart=True)
     val_loss, val_acc = test(model, device, val_loader, criterion, "Validation data set", bipart=True)
@@ -114,6 +137,8 @@ else:
     horodecki_loss, horodecki_acc = test(model, device, test_horodecki_loader, criterion, "Horodecki data set", bipart=True)
     bennet_loss, bennet_acc = test(model, device, test_bennet_loader, criterion, "Bennet data set", bipart=True)   
     bisep_loss, bisep_acc = test(model, device, test_biseparable_loader, criterion, "Biseparable data set", bipart=True)
+    ghz_loss, ghz_acc = test(model, device, test_ghz_loader, criterion, "GHZ data set", bipart=True)
+    w_loss, w_acc = test(model, device, test_w_loader, criterion, "W data set", bipart=True)
 
 save_acc(results_path, '', [train_loss, train_acc, val_loss, val_acc, pure_loss, pure_acc, mixed_loss, mixed_acc, acin_loss, acin_acc, horodecki_loss, horodecki_acc,\
-                        bennet_loss, bennet_acc, bisep_loss, bisep_acc])
+                        bennet_loss, bennet_acc, bisep_loss, bisep_acc, ghz_loss, ghz_acc, w_loss, w_acc])

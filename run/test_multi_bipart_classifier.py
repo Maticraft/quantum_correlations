@@ -41,15 +41,22 @@ bennet_root_dir = './datasets/3qbits/bennet_test/matrices/'
 biseparable_dictionary_path = './datasets/3qbits/biseparable_test/negativity_bipartitions.txt'
 biseparable_root_dir = './datasets/3qbits/biseparable_test/matrices/'
 
+ghz_dictionary_path = './datasets/3qbits/ghz_test/negativity_bipartitions.txt'
+ghz_root_dir = './datasets/3qbits/ghz_test/matrices/'
+
+w_dictionary_path = './datasets/3qbits/w_test/negativity_bipartitions.txt'
+w_root_dir = './datasets/3qbits/w_test/matrices/'
+
 separator_path = './models/3qbits/FancySeparator_l1_all_sep_o48_fc4_bl.pt'
 
-model_dir = './models/3qbits/multi_class_siam/no_pptes_bisep_560/'
-model_name = 'weights05_ep10_class_best_val_loss_{}'
+model_dir = './models/3qbits/multi_class_siam_eq_log_10/negativity_bisep/'
+model_name = 'weights05_ep10_cnn_class_best_val_loss_{}'
 
-results_dir = './results/3qbits/multi_class_siam/nopptes_bisep_560/'
+results_dir = './results/3qbits/multi_class_siam_eq_log_10/negativity_bisep/'
 results_file = 'weights05_ep10_class_best_val_loss_paper.txt'
 
-thresholds = [0., 5.e-4, 1.e-3, 2.e-3, 5.e-3, 1.e-2, 2.e-2, 5.e-2]
+thresholds = [0., 1.e-4, 2.e-4, 5.e-4, 1.e-3, 2.e-3, 5.e-3, 1.e-2, 2.e-2, 5.e-2, 1.e-1]
+# thresholds = [0., 5.e-4, 1.e-3, 2.e-3, 5.e-3, 1.e-2, 2.e-2, 5.e-2]
 # thresholds = [0., 1.e-3, 1.e-1]
 # thresholds = np.geomspace(0.0001, 0.1, 15)
 # thresholds = np.insert(thresholds, 0, 0.)
@@ -88,6 +95,12 @@ test_bennet_loader = DataLoader(test_bennet_dataset, batch_size=batch_size, shuf
 test_biseparable_dataset = BipartitionMatricesDataset(biseparable_dictionary_path, biseparable_root_dir, 0.0001)
 test_biseparable_loader = DataLoader(test_biseparable_dataset, batch_size=batch_size, shuffle=True)
 
+test_ghz_dataset = BipartitionMatricesDataset(ghz_dictionary_path, ghz_root_dir, 0.0001)
+test_ghz_loader = DataLoader(test_ghz_dataset, batch_size=batch_size, shuffle=True)
+
+test_w_dataset = BipartitionMatricesDataset(w_dictionary_path, w_root_dir, 0.0001)
+test_w_loader = DataLoader(test_w_dataset, batch_size=batch_size, shuffle=True)
+
 os.makedirs(results_dir, exist_ok=True)
 os.makedirs(model_dir, exist_ok=True)
 
@@ -112,7 +125,7 @@ for model_path in model_paths:
     models.append(model)
 print('Models loaded')
 
-save_acc(results_path, '', ['Train loss', 'Train_acc', 'Validation loss', 'Validation accuracy', 'Pure loss', 'Pure accuracy', 'Mixed loss', 'Mixed accuracy', 'ACIN loss', 'ACIN accuracy', 'Horodecki loss', 'Horodecki accuracy', 'Bennet loss', 'Bennet accuracy', 'Bisep loss', 'Bisep accuracy'], write_mode='w')
+save_acc(results_path, '', ['Train loss', 'Train_acc', 'Validation loss', 'Validation accuracy', 'Pure loss', 'Pure accuracy', 'Mixed loss', 'Mixed accuracy', 'ACIN loss', 'ACIN accuracy', 'Horodecki loss', 'Horodecki accuracy', 'Bennet loss', 'Bennet accuracy', 'Bisep loss', 'Bisep accuracy', 'GHZ loss', 'GHZ accuracy', 'W loss', 'W accuracy'], write_mode='w')
 
 train_loss, train_acc = test_multi_classifier(models, separator, thresholds, device, train_loader, criterion, "Train data set", bipart=True)
 val_loss, val_acc = test_multi_classifier(models, separator, thresholds, device, val_loader, criterion, "Validation data set", bipart=True)
@@ -122,5 +135,7 @@ acin_loss, acin_acc = test_multi_classifier(models, separator, thresholds, devic
 horodecki_loss, horodecki_acc = test_multi_classifier(models, separator, thresholds, device, test_horodecki_loader, criterion, "Horodecki data set", bipart=True)
 bennet_loss, bennet_acc = test_multi_classifier(models, separator, thresholds, device, test_bennet_loader, criterion, "Bennet data set", bipart=True)
 biseparable_loss, biseparable_acc = test_multi_classifier(models, separator, thresholds, device, test_biseparable_loader, criterion, "Biseparable data set", bipart=True)
+ghz_loss, ghz_acc = test_multi_classifier(models, separator, thresholds, device, test_ghz_loader, criterion, "GHZ data set", bipart=True)
+w_loss, w_acc = test_multi_classifier(models, separator, thresholds, device, test_w_loader, criterion, "W data set", bipart=True)
 save_acc(results_path, '', [train_loss, train_acc, val_loss, val_acc, pure_loss, pure_acc, mixed_loss, mixed_acc, acin_loss, acin_acc,\
-                            horodecki_loss, horodecki_acc, bennet_loss, bennet_acc, biseparable_loss, biseparable_acc])
+                            horodecki_loss, horodecki_acc, bennet_loss, bennet_acc, biseparable_loss, biseparable_acc, ghz_loss, ghz_acc, w_loss, w_acc])

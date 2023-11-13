@@ -664,6 +664,36 @@ def generate_2xd(qbits, encoded, indx = 0, save_data_dir = '2xd', examples_ratio
     return args['start_index']
 
 
+def generate_ghz(qbits, encoded, indx = 0, save_data_dir = 'ghz', examples_ratio = 1., discord = False, format = 'npy', separator_loss_range = None):
+    args = {
+        'qubits_num': qbits,
+        'examples': int(examples_ratio*10000),
+        'save_data_dir': save_data_dir,
+        'encoded': encoded,
+        'discord': discord,
+        'start_index': indx,
+        'format': format,
+        'separator_loss_range': separator_loss_range,
+    }
+    generator = PureStatesGenerator()
+    generator.generate_circuit_matrices(**args, specified_method=2)
+
+
+def generate_w(qbits, encoded, indx = 0, save_data_dir = 'w', examples_ratio = 1., discord = False, format = 'npy', separator_loss_range = None):
+    args = {
+        'qubits_num': qbits,
+        'examples': int(examples_ratio*10000),
+        'save_data_dir': save_data_dir,
+        'encoded': encoded,
+        'discord': discord,
+        'start_index': indx,
+        'format': format,
+        'separator_loss_range': separator_loss_range,
+    }
+    generator = PureStatesGenerator()
+    generator.generate_circuit_matrices(**args, specified_method=1)
+
+
 # ENTANGLEMENT PAPER TRAIN SETS 3/3
 # 60 000 entangled mixed reduced + 20 000 separable mixed reduced
 def generate_mixed_reduced_train_balanced(qubits, encoded, indx = 0, ppt = True, save_data_dir = 'mixed_train_balanced', examples_ratio = 1., zero_neg = 'incl', qubits_glob = 9, discord = False, format = 'npy', separator_loss_range = None):
