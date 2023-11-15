@@ -8,6 +8,7 @@ with parameters of your choice specified inside the file (e.g. for paper "Identi
 
 
 To evaluate the models run:
+
 For CNN and Siamese CNN from entanglement paper:
 ```
 python3 run/test_bipart_classifier.py
@@ -27,8 +28,8 @@ python3 run/test_separator.py
 
 
 To train the models use scripts:
-- run/train_bipart_classifier.py and run/train_multi_bipart_classifier.py with parameters set appropriately.
-- run/train_separator.py with parameters set appropriately.
+- entanglement: run/train_bipart_classifier.py and run/train_multi_bipart_classifier.py with parameters set appropriately.
+- discord: run/train_separator.py with parameters set appropriately.
 
 
 Scripts for additional plots can be found in entanglement/plots and discord/plots for respective papers.
