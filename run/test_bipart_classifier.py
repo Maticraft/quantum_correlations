@@ -111,8 +111,6 @@ os.makedirs(model_dir, exist_ok=True)
 model_path = model_dir + model_name + '.pt'
 results_path = results_dir + results_file
 
-# model = FancySeparatorEnsembleClassifier(qbits_num, sep_ch, sep_fc_num, train_dataset.bipart_num, 3)
-# model = FancyClassifier(qbits_num, sep_ch, sep_fc_num, 5, train_dataset.bipart_num, 128)
 if siamese_flag:
     model = VectorSiamese(qbits_num, train_dataset.bipart_num, 3, 5, 2, 16, ratio_type='sqrt', mode='classifier', biparts_mode='all')
 else:
