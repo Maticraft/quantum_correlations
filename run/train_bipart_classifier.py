@@ -49,10 +49,10 @@ bennet_root_dir = f'./datasets/3qbits/bennet_test/matrices/'
 
 if verified_dataset:
     results_dir = './results/3qbits/nopptes_bisep_test/'
-    model_dir = './models/3qbits/nopptes_bisep/'
+    model_dir = './paper_models/3qbits/nopptes_bisep/'
 else:
     results_dir = './results/3qbits/negativity_bisep_test/'
-    model_dir = './models/3qbits/negativity_bisep/'
+    model_dir = './paper_models/3qbits/negativity_bisep/'
 
 if siamese_flag:
     model_name = 'siam_cnn_class_best_val_paper'
@@ -91,10 +91,6 @@ test_horodecki_loader = DataLoader(test_horodecki_dataset, batch_size=batch_size
 
 test_bennet_dataset = BipartitionMatricesDataset(bennet_dictionary_path, bennet_root_dir, 0.0001)
 test_bennet_loader = DataLoader(test_bennet_dataset, batch_size=batch_size, shuffle=True)
-
-# model = FancySeparatorEnsembleClassifier(qbits_num, sep_ch, sep_fc_num, train_dataset.bipart_num, 3)
-# model = FancyClassifier(qbits_num, sep_ch, sep_fc_num, 5, train_dataset.bipart_num, 128)
-# model = EigvalsClassifier(qbits_num, train_dataset.bipart_num, input_channels=2, fc_num=10, linear_transforms=128, hidden_size=1024)
 
 if siamese_flag:
     model = VectorSiamese(qbits_num, train_dataset.bipart_num, 3, 5, 2, 16, ratio_type='sqrt', mode='classifier', biparts_mode='all')

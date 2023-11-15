@@ -52,7 +52,7 @@ gl_mixed_bal_test_loader = DataLoader(gl_mixed_bal_test_set, batch_size=batch_si
 gl_mixed_bal_test_disc_set = DensityMatricesDataset(data_dir + 'mixed_test_bal/dictionary.txt', data_dir + 'mixed_test_bal/matrices', "discord", threshold)
 gl_mixed_bal_test_disc_loader = DataLoader(gl_mixed_bal_test_disc_set, batch_size=batch_size)
 
-save_path_loss = './models/3qbits/multi_sep_th2/FancySeparator_l1_{}_o48_{}bl_it{}.pt'
+save_path_loss = './paper_models/3qbits/multi_sep_th2/FancySeparator_l1_{}_o48_{}bl_it{}.pt'
 
 train_path =  './results/3qbits/multi_sep_th2/l1_sep_{}_{}it{}_train_loss.txt'
 thresholds_path = './results/3qbits/multi_sep_th2/l1_sep_{}_{}thresholds.txt'

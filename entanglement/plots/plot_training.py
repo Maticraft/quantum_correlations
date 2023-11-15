@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-data1 = np.loadtxt('c:/studia/PhD/entanglement_detection/results/vectorClassifier_3q_nopptes_training_val_balb.txt', delimiter= "  ")
+data1 = np.loadtxt('./results/vectorClassifier_3q_nopptes_training_val_balb.txt', delimiter= "  ")
 
 plt.grid(True)
 plt.xlabel("Epoch")

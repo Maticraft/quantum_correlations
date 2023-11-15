@@ -4,11 +4,10 @@ sys.path.append('./')
 
 import torch
 import torch.nn as nn
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import DataLoader
 import numpy as np
 from commons.data.datasets import DensityMatricesDataset
-from commons.models.cnns import CNN
-from commons.models.separators import FancySeparator, Separator, SiameseFancySeparator
+from commons.models.separators import FancySeparator
 
 from commons.pytorch_utils import save_acc
 from commons.test_utils.base import test
@@ -50,9 +49,8 @@ gl_mixed_bal_test_loader = DataLoader(gl_mixed_bal_test_set, batch_size=batch_si
 gl_mixed_bal_test_disc_set = DensityMatricesDataset(data_dir + 'mixed_test_bal/dictionary.txt', data_dir + 'mixed_test_bal/matrices', "discord", threshold)
 gl_mixed_bal_test_disc_loader = DataLoader(gl_mixed_bal_test_disc_set, batch_size=batch_size)
 
-save_path_acc = './models/3qbits/FancySeparator_l1_{}_o48_{}bacc.pt'
-save_path_loss = './models/3qbits/FancySeparator_l1_{}_o48_{}bl.pt'
-
+save_path_acc = './paper_models/3qbits/FancySeparator_l1_{}_o48_{}bacc.pt'
+save_path_loss = './paper_models/3qbits/FancySeparator_l1_{}_o48_{}bl.pt'
 
 count_save_path = './results/3qbits/discord/l1_sep_{}_{}prediction_thresh_mixed_bal_bal_acc_log.txt'
 train_path =  './results/3qbits/discord/l1_sep_{}_{}train_loss.txt'
@@ -209,4 +207,3 @@ def perform_computations(params):
 for i, params in enumerate(params_list):
     print(i)
     perform_computations(params)
-

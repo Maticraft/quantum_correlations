@@ -35,7 +35,7 @@ fi_max = np.pi/2
 fi_min = 0
 
 # NN params
-sep_save_path = './classifiers/FancySeparator_l1_all_sep_3q_o48_fc4_bl.pt'
+sep_save_path = './paper_models/3qbits/FancySeparator_l1_all_sep_o48_fc4_bl.pt'
 out_channels_per_ratio = 24
 input_channels = 2
 fc_layers = 4

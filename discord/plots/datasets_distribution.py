@@ -11,7 +11,7 @@ import torch.nn as nn
 from torch.utils.data import DataLoader, Subset
 
 
-separator_path = './models/3qbits/FancySeparator_l1_all_sep_o48_fc4_bl.pt'
+separator_path = './paper_models/3qbits/FancySeparator_l1_all_sep_o48_fc4_bl.pt'
 
 val_dictionary_path = './datasets/3qbits/val_bisep_no_pptes/negativity_bipartitions.txt'
 val_root_dir = './datasets/3qbits/val_bisep_no_pptes/matrices/'

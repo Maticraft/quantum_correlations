@@ -30,7 +30,7 @@ else:
     train_dictionary_path = './datasets/3qbits/train_bisep_negativity_labeled/negativity_bipartitions.txt'
     train_root_dir = './datasets/3qbits/train_bisep_negativity_labeled/matrices/'
 
-separator_path = './models/3qbits/FancySeparator_l1_all_sep_o48_fc4_bl.pt'
+separator_path = './paper_models/3qbits/FancySeparator_l1_all_sep_o48_fc4_bl.pt'
 
 val_dictionary_path = './datasets/3qbits/val_bisep_no_pptes/negativity_bipartitions.txt'
 val_root_dir = './datasets/3qbits/val_bisep_no_pptes/matrices/'
@@ -51,19 +51,15 @@ bennet_dictionary_path = './datasets/3qbits/bennet_test/negativity_bipartitions.
 bennet_root_dir = './datasets/3qbits/bennet_test/matrices/'
 
 if verified_dataset:
-    model_dir = './models/3qbits/multi_class_siam_eq_log_10/no_pptes_bisep/'
+    model_dir = './paper_models/3qbits/multi_class_siam_eq_log_10/no_pptes_bisep/'
     results_dir = './results/3qbits/multi_class_siam_eq_log_10/no_pptes_bisep/'
 else:
-    model_dir = './models/3qbits/multi_class_siam_eq_log_10/negativity_bisep/'
+    model_dir = './paper_models/3qbits/multi_class_siam_eq_log_10/negativity_bisep/'
     results_dir = './results/3qbits/multi_class_siam_eq_log_10/negativity_bisep/'
     
 model_name = 'weights05_ep10_class_best_val_loss_{}'
 
 thresholds = [0., 1.e-4, 2.e-4, 5.e-4, 1.e-3, 2.e-3, 5.e-3, 1.e-2, 2.e-2, 5.e-2, 1.e-1]
-
-# thresholds = [0., 1.e-3, 1.e-1]
-# thresholds = np.geomspace(0.001, 0.1, 20)
-# thresholds = np.insert(thresholds, 0, 0.)
 
 batch_size = 128
 batch_interval = 800
@@ -105,7 +101,6 @@ for i in range(len(thresholds) - 1):
     model_path = model_dir + model_name.format(i) + '.pt'
     results_path = results_dir + model_name.format(i) + '.txt'
 
-    # save_acc(results_path, 'Epoch', ['Train loss', 'Validation loss', 'Validation accuracy', 'Validation 2xd loss', 'Validation 2xd accuracy', 'Mixed loss', 'Mixed accuracy', 'ACIN loss', 'ACIN accuracy', 'Horodecki loss', 'Horodecki accuracy',  'Bennet loss', 'Bennet accuracy', f'Threshold range: {str(threshold_range)}'], write_mode='w')
     save_acc(results_path, 'Epoch', ['Train loss', 'Permutation loss', 'LO loss', 'Validation loss', 'Validation accuracy', 'Validation 2xd loss', 'Validation 2xd accuracy', 'Mixed loss', 'Mixed accuracy', 'ACIN loss', 'ACIN accuracy', 'Horodecki loss', 'Horodecki accuracy',  'Bennet loss', 'Bennet accuracy', f'Threshold range: {str(threshold_range)}'], write_mode='w')
 
     try:
@@ -151,9 +146,7 @@ for i in range(len(thresholds) - 1):
     except:
         eval_flags['bennet'] = False
 
-    # model = FancySeparatorEnsembleClassifier(qbits_num, sep_ch, sep_fc_num, train_dataset.bipart_num, 3)
-    # model = FancyClassifier(qbits_num, sep_ch, sep_fc_num, 5, train_dataset.bipart_num, 128)
-    # model = CNN(qbits_num, train_dataset.bipart_num, 3, 5, 2, 16, ratio_type='sqrt', mode='classifier')
+
     model = VectorSiamese(qbits_num, train_dataset.bipart_num, 3, 5, 2, 16, ratio_type='sqrt', mode='classifier', biparts_mode='all')
     model.double()
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
@@ -169,25 +162,18 @@ for i in range(len(thresholds) - 1):
     best_loss = 1e10
 
     for epoch in range(epoch_num):
-        # train_loss = train(model, device, train_loader, optimizer, criterion, epoch, batch_interval)
         train_loss, perm_loss, loc_loss = train_vector_siamese(model, device, train_loader, optimizer, criterion, epoch, batch_interval, loc_op_flag=True, reduced_perms_num=1)
         if eval_flags['val']:
-            # val_loss, val_acc = test(model, device, val_loader, criterion, "Validation data set", bipart=True)
             val_loss, val_acc = test_vector_siamese(model, device, val_loader, criterion, "Validation data set", bipart='separate', negativity_ext=False, low_thresh=0.5, high_thresh=0.5, decision_point=0.5, balanced_acc=False)
         if eval_flags['val_2xd']:
-            # val_2xd_loss, val_2xd_acc = test(model, device, val_2xd_loader, criterion, "Validation 2xd data set", bipart=True)
             val_2xd_loss, val_2xd_acc = test_vector_siamese(model, device, val_2xd_loader, criterion, "Validation 2xd data set", bipart='separate', negativity_ext=False, low_thresh=0.5, high_thresh=0.5, decision_point=0.5, balanced_acc=False)
         if eval_flags['mixed']:
-            # mixed_loss, mixed_acc = test(model, device, test_mixed_loader, criterion, "Mixed data set", bipart=True)
             mixed_loss, mixed_acc = test_vector_siamese(model, device, test_mixed_loader, criterion, "Mixed data set", bipart='separate', negativity_ext=False, low_thresh=0.5, high_thresh=0.5, decision_point=0.5, balanced_acc=False)
         if eval_flags['acin']:
-            # acin_loss, acin_acc = test(model, device, test_acin_loader, criterion, "ACIN data set", bipart=True)    
             acin_loss, acin_acc = test_vector_siamese(model, device, test_acin_loader, criterion, "ACIN data set", bipart='separate', negativity_ext=False, low_thresh=0.5, high_thresh=0.5, decision_point=0.5, balanced_acc=False)
         if eval_flags['horodecki']:
-            # horodecki_loss, horodecki_acc = test(model, device, test_horodecki_loader, criterion, "Horodecki data set", bipart=True)
             horodecki_loss, horodecki_acc = test_vector_siamese(model, device, test_horodecki_loader, criterion, "Horodecki data set", bipart='separate', negativity_ext=False, low_thresh=0.5, high_thresh=0.5, decision_point=0.5, balanced_acc=False)
         if eval_flags['bennet']:
-            # bennet_loss, bennet_acc = test(model, device, test_bennet_loader, criterion, "Bennet data set", bipart=True)
             bennet_loss, bennet_acc = test_vector_siamese(model, device, test_bennet_loader, criterion, "Bennet data set", bipart='separate', negativity_ext=False, low_thresh=0.5, high_thresh=0.5, decision_point=0.5, balanced_acc=False)
         
         total_val_loss = val_loss + val_2xd_loss
@@ -195,5 +181,4 @@ for i in range(len(thresholds) - 1):
         if total_val_loss < best_loss:
             best_loss = total_val_loss
             torch.save(model.state_dict(), model_path)
-        # save_acc(results_path, epoch, [train_loss, val_loss, val_acc, val_2xd_loss, val_2xd_acc, mixed_loss, mixed_acc, acin_loss, acin_acc, horodecki_loss, horodecki_acc, bennet_loss, bennet_acc, f'Threshold range: {str(threshold_range)}'], write_mode='a')
         save_acc(results_path, epoch, [train_loss, perm_loss, loc_loss, val_loss, val_acc, val_2xd_loss, val_2xd_acc, mixed_loss, mixed_acc, acin_loss, acin_acc, horodecki_loss, horodecki_acc, bennet_loss, bennet_acc, f'Threshold range: {str(threshold_range)}'], write_mode='a')

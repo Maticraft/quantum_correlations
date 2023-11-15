@@ -53,13 +53,13 @@ ghz_root_dir = './datasets/3qbits/ghz_mixed_test/matrices/'
 w_dictionary_path = './datasets/3qbits/w_mixed_test/negativity_bipartitions.txt'
 w_root_dir = './datasets/3qbits/w_mixed_test/matrices/'
 
-separator_path = './models/3qbits/FancySeparator_l1_all_sep_o48_fc4_bl.pt'
+separator_path = './paper_models/3qbits/FancySeparator_l1_all_sep_o48_fc4_bl.pt'
 
 if verified_dataset:
-    model_dir = './models/3qbits/multi_class_siam_eq_log_10/no_pptes_bisep/'
+    model_dir = './paper_models/3qbits/multi_class_siam_eq_log_10/no_pptes_bisep/'
     results_dir = './results/3qbits/multi_class_siam_eq_log_10/no_pptes_bisep/'
 else:
-    model_dir = './models/3qbits/multi_class_siam_eq_log_10/negativity_bisep/'
+    model_dir = './paper_models/3qbits/multi_class_siam_eq_log_10/negativity_bisep/'
     results_dir = './results/3qbits/multi_class_siam_eq_log_10/negativity_bisep/'
 
 model_name = 'weights05_ep10_cnn_class_best_val_loss_{}'
@@ -67,13 +67,6 @@ model_name = 'weights05_ep10_cnn_class_best_val_loss_{}'
 results_file = 'weights05_ep10_class_best_val_loss_paper.txt'
 
 thresholds = [0., 1.e-4, 2.e-4, 5.e-4, 1.e-3, 2.e-3, 5.e-3, 1.e-2, 2.e-2, 5.e-2, 1.e-1]
-# thresholds = [0., 5.e-4, 1.e-3, 2.e-3, 5.e-3, 1.e-2, 2.e-2, 5.e-2]
-# thresholds = [0., 1.e-3, 1.e-1]
-# thresholds = np.geomspace(0.0001, 0.1, 15)
-# thresholds = np.insert(thresholds, 0, 0.)
-# thresholds = np.geomspace(0.001, 0.1, 20)
-# thresholds = np.insert(thresholds, 0, 0.)
-# thresholds = np.delete(thresholds, len(thresholds) - 1)
 
 batch_size = 128
 batch_interval = 800
@@ -127,9 +120,6 @@ results_path = results_dir + results_file
 
 models = []
 for model_path in model_paths:
-    # model = FancySeparatorEnsembleClassifier(qbits_num, sep_ch, sep_fc_num, train_dataset.bipart_num, 3)
-    # model = FancyClassifier(qbits_num, sep_ch, sep_fc_num, 5, train_dataset.bipart_num, 128)
-    # model = CNN(qbits_num, train_dataset.bipart_num, 3, 5, 2, 16, ratio_type='sqrt', mode='classifier')
     model = VectorSiamese(qbits_num, train_dataset.bipart_num, 3, 5, 2, 16, ratio_type='sqrt', mode='classifier', biparts_mode='all')
     model.double()
     model.load_state_dict(torch.load(model_path))

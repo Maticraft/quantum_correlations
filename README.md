@@ -20,6 +20,15 @@ python3 run/test_multi_bipart_classifier.py
 ```
 with verified_dataset flag set adequately.
 
+For Separator model from discord paper:
+```
+python3 run/test_separator.py
+```
+
 
 To train the models use scripts:
-run/train_bipart_classifier.py and run/train_multi_bipart_classifier.py with parameters set appropriately.
+- run/train_bipart_classifier.py and run/train_multi_bipart_classifier.py with parameters set appropriately.
+- run/train_separator.py with parameters set appropriately.
+
+
+Scripts for additional plots can be found in entanglement/plots and discord/plots for respective papers.

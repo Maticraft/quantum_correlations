@@ -39,17 +39,16 @@ biparts_mode = 'all'
 thresh = 0.0165
 out_channels_per_ratio = 24
 input_channels = 2
+fc_layers = 4
 criterion = 'L1'
 
 
 res_save_path = "./plots/discord_map3q_pred_sep_loss.png"
 
-siam_save_path = './classifiers/3qubits_disc/vectorClassifier_3q_siam_pure_bal_param_clean_cn_3_k2_ep50.pt'
+siam_save_path = './paper_models/3qbits/nopptes_bisep/siam_cnn_class_best_val_paper.pt'
+save_path = './paper_models/3qbits/nopptes_bisep/cnn_class_best_val_paper.pt'
+sep_save_path = './paper_models/3qbits/FancySeparator_l1_all_sep_o48_fc4_bl.pt'
 
-save_path = './classifiers/3qubits_disc/vectorClassifier_3q_pure_bal_cn3_k2_ep6.pt'
-#save_path = './classifiers/3qubits_disc/vectorClassifier_3q_pure_bal_param_cn3_k2_ep20.pt'
-
-sep_save_path = './classifiers/FancySeparator_l1_pure_sep_3q_o48.pt'
 
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')

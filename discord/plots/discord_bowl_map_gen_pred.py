@@ -47,18 +47,8 @@ out_channels_per_ratio = 24
 input_channels = 2
 fc_layers = 4
 
-#sep_save_path = './classifiers/FancySeparator_l1_pure_sep_3q_o48.pt'
-#sep_save_path = './models/FancySeparator_l1_pure_sep_param_3q_o48_bl.pt'
-#sep_save_path = './classifiers/FancySeparatorSymTrue_l1_sep_3q_o48_bl.pt'
-#sep_save_path = './classifiers/FancySeparator_l1_pure_sep_param_3q_o2_bl.pt'
-#sep_save_path = './classifiers/FancySeparatorSymTrue_l1_sep_sym_3q_o48_bl.pt'
-#sep_save_path = './classifiers/SiamFancySeparatorSymTrue_l1_sep_sym_3q_o48_bl.pt'
-#sep_save_path = './classifiers/SiamFancySeparatorOutSym_l1_sep_sym_3q_o48_bl.pt'
+sep_save_path = './paper_models/3qbits/FancySeparator_l1_all_sep_o48_fc4_bl.pt'
 
-#sep_save_path = './classifiers/FancySeparator_l1_npzd_3q_o48_bl.pt'
-#sep_save_path = './classifiers/FancySeparator_l1_npzd_3q_o48_fc4_bl.pt'
-#sep_save_path = './classifiers/FancySeparator_l1_sep_3q_o48_fc4_bl.pt'
-sep_save_path = './classifiers/FancySeparator_l1_nps_3q_o48_fc4_bl.pt'
 
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')

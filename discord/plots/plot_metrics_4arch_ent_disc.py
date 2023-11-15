@@ -2,9 +2,6 @@ import matplotlib.pyplot as plt
 from matplotlib.transforms import offset_copy
 import numpy as np
 
-# data1 = np.loadtxt('./results/discord/trace_prediction_thresh_mixed_sep_param_bl_bal_acc_log.txt', delimiter='  ', skiprows=1)
-# data2 = np.loadtxt('./results/discord/prediction_thresh_mixed_sep_param_bl_bal_acc_log.txt', delimiter='  ', skiprows=1)
-
 data1 = np.loadtxt('./results/discord/trace_prediction_thresh_mixed_bal_bal_acc_log.txt', delimiter='  ', skiprows=1)
 data2 = np.loadtxt('./results/discord/sep_pure_sep_param_prediction_thresh_mixed_bal_bal_acc_log.txt', delimiter='  ', skiprows=1)
 data3 = np.loadtxt('./results/discord/sep_prod_prediction_thresh_mixed_bal_bal_acc_log.txt', delimiter='  ', skiprows=1)

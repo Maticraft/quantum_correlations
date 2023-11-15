@@ -28,7 +28,7 @@ def filter_data_with_separator_and_target(data, separator, thresholds_range, tar
 
 
 def init_default_separator_filter():
-    separator_path = './models/3qbits/FancySeparator_l1_all_sep_o48_fc4_bl.pt'
+    separator_path = './paper_models/3qbits/FancySeparator_l1_all_sep_o48_fc4_bl.pt'
     qbits_num = 3
     sep_ch = 24
     sep_fc_num = 4

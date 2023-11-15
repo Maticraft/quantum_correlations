@@ -55,10 +55,10 @@ w_root_dir = './datasets/3qbits/w_test/matrices/'
 
 if verified_dataset:
     results_dir = './results/3qbits/nopptes_bisep_test/'
-    model_dir = './models/3qbits/nopptes_bisep/'
+    model_dir = './paper_models/3qbits/nopptes_bisep/'
 else:
     results_dir = './results/3qbits/negativity_bisep_test/'
-    model_dir = './models/3qbits/negativity_bisep/'
+    model_dir = './paper_models/3qbits/negativity_bisep/'
 
 if siamese_flag:
     model_name = 'siam_cnn_class_best_val_paper'

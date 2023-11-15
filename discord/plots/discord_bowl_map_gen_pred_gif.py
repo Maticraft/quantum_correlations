@@ -40,18 +40,17 @@ qubits_num = 3
 #thresh = 0.0004
 out_channels_per_ratio = 24
 input_channels = 2
+fc_layers = 4
 criterion = 'L1'
 
-
-#sep_save_path = './classifiers/FancySeparator_l1_pure_sep_3q_o48.pt'
-sep_save_path = './classifiers/FancySeparator_l1_pure_sep_param_3q_o48_bl.pt'
+sep_save_path = './paper_models/3qbits/FancySeparator_l1_all_sep_o48_fc4_bl.pt'
 count_save_path = './results/discord/prediction_thresh_param_cuta_sep_param_bl.txt'
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 print('Using device:', device)
 
 
-model = FancySeparator(qubits_num, out_channels_per_ratio, input_channels)
+model = FancySeparator(qubits_num, out_channels_per_ratio, input_channels, fc_layers)
 model.load_state_dict(torch.load(sep_save_path))
 model.double()
 model.to(device)

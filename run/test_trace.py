@@ -15,16 +15,13 @@ data_dir = './datasets/'
 batch_size = 128
 threshold = 1.e-3
 
-
 gl_mixed_bal_test_set = DensityMatricesDataset(data_dir + 'mixed_test_balanced_disc/dictionary.txt', data_dir + 'mixed_test_balanced_disc/matrices', "negativity", threshold)
 gl_mixed_bal_test_loader = DataLoader(gl_mixed_bal_test_set, batch_size=batch_size)
 
 gl_mixed_bal_test_disc_set = DensityMatricesDataset(data_dir + 'mixed_test_balanced_disc/dictionary.txt', data_dir + 'mixed_test_balanced_disc/matrices', "discord", threshold)
 gl_mixed_bal_test_disc_loader = DataLoader(gl_mixed_bal_test_disc_set, batch_size=batch_size)
 
-
 count_save_path = './results/discord/bures_trace_prediction_thresh_mixed_bal_bal_acc_log_low.txt'
-
 
 def perform_computations():
     thresholds = np.geomspace(1.e-8, 0.0001, 100)

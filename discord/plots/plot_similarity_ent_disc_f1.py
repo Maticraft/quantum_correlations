@@ -2,9 +2,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 from commons.pytorch_utils import load_acc
 
-# data1 = np.loadtxt('./results/discord/trace_prediction_thresh_mixed_sep_param_bl_bal_acc_log.txt', delimiter='  ', skiprows=1)
-# data2 = np.loadtxt('./results/discord/prediction_thresh_mixed_sep_param_bl_bal_acc_log.txt', delimiter='  ', skiprows=1)
-
 data1 = load_acc('./results/discord/bures_trace_prediction_thresh_mixed_bal_bal_acc_log.txt', skiprows=1)
 data2 = load_acc('./results/discord/bures_sep_all_sep_fc4_prediction_thresh_mixed_bal_bal_acc_log.txt', skiprows=1)
 
