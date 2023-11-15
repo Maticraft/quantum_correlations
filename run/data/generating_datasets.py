@@ -34,7 +34,7 @@ if paper == 'discord':
     # Generate validation set
     _ = generate_train_separable(qbits, encoded, indx = 0, save_data_dir = 'val_separable', examples_ratio = 0.1, discord = True, qubits_glob = 9, format=format)
     # Generate test sets
-    # _ = generate_pure_test(qbits, encoded, indx = 0, save_data_dir = 'pure_test', discord = True)
+    _ = generate_pure_test(qbits, encoded, indx = 0, save_data_dir = 'pure_test', discord = True)
     _ = generate_mixed_balanced_test_set(qbits, encoded, indx = 0, save_data_dir = 'mixed_test_bal', max_num_ps = None, discord = True, permute = False, format=format)
 
 if paper == 'entanglement':
