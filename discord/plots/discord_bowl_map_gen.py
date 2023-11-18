@@ -1,9 +1,12 @@
+from math import tan
+
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from matplotlib.ticker import AutoMinorLocator
-from commons.metrics import generate_parametrized_qs, global_entanglement_bipartitions, local_randomize_matrix
-from math import tan
+
+from commons.data.generation_functions import generate_parametrized_qs
+from commons.metrics import global_entanglement_bipartitions
 
 
 def shift_param(param, shift, old_value):

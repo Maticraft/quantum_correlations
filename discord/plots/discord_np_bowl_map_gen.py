@@ -15,7 +15,6 @@ from commons.trace import trace_predict
 from commons.metrics import global_entanglement_bipartitions
 from commons.test_utils.separator import separator_predict
 from commons.data.generation_functions import generate_parametrized_np_qs
-from commons.data.circuit_ops import local_randomize_matrix
 
 results_dir = './plots'
 if not os.path.exists(results_dir):

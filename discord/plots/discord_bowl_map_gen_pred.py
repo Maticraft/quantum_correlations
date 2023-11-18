@@ -1,15 +1,17 @@
 #%%
+from math import tan
+
 import numpy as np
 import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-from commons.metrics import generate_parametrized_qs, global_entanglement_bipartitions
-from math import tan
-from commons.models.separators import FancySeparator
-from commons.pytorch_utils import loc_op_circ, all_perms
 import torch
 
+from commons.data.generation_functions import generate_parametrized_qs
+from commons.metrics import global_entanglement_bipartitions
+from commons.models.separators import FancySeparator
+from commons.pytorch_utils import loc_op_circ
 from commons.test_utils.separator import separator_predict
 from commons.trace import trace_predict
 

@@ -1,7 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
-from commons.metrics import generate_parametrized_qs, global_entanglement_bipartitions, local_randomize_matrix
+from commons.metrics import global_entanglement_bipartitions
+from commons.data.generation_functions import generate_parametrized_qs
 
 # Params
 a = 1/np.sqrt(2) #amplitude
