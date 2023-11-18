@@ -1,3 +1,7 @@
+import sys
+import os
+sys.path.append('./')
+
 import matplotlib.colors as mcolors
 import matplotlib.pyplot as plt
 import matplotlib.patches as mpatches
@@ -5,20 +9,26 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 import numpy as np
 import torch
 from commons.models.separators import FancySeparator
+from commons.models.siamese_networks import VectorSiamese
 
 from commons.trace import trace_predict
-from commons.metrics import generate_parametrized_np_qs, global_entanglement_bipartitions, local_randomize_matrix
+from commons.metrics import global_entanglement_bipartitions
 from commons.test_utils.separator import separator_predict
+from commons.data.generation_functions import generate_parametrized_np_qs
+from commons.data.circuit_ops import local_randomize_matrix
 
+results_dir = './plots'
+if not os.path.exists(results_dir):
+    os.makedirs(results_dir)
 
 qubits_num = 3
 trace_thresh = 1.e-5
-map_mode = 'sep_loss' # possible modes: 'sep_loss', 'trace_loss', 'real_metrics'
-plot_mode = 'contourf' # possible modes: 'scatter', 'contourf'
+map_mode = 'class_prob' # possible modes: 'sep_loss', 'trace_loss', 'real_metrics', 'class_prob
+plot_mode = 'scatter' # possible modes: 'scatter', 'contourf'
 criterion = 'bures'
-log_scale = True
-min_loss = 1.e-3
-max_loss = 0.1
+log_scale = False
+min_loss = 0.
+max_loss = 1.
 resolution = 100
 
 # Params
@@ -44,10 +54,17 @@ fc_layers = 4
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 device = 'cpu'
 
-model = FancySeparator(qubits_num, out_channels_per_ratio, input_channels, fc_layers)
-model.load_state_dict(torch.load(sep_save_path))
-model.double()
-model.to(device)
+if map_mode == 'sep_loss':
+    model = FancySeparator(qubits_num, out_channels_per_ratio, input_channels, fc_layers)
+    model.load_state_dict(torch.load(sep_save_path))
+    model.double()
+    model.to(device)
+if map_mode == 'class_prob':
+    siam_save_path = './paper_models/3qbits/negativity_bisep/siam_cnn_class_best_val_paper.pt'
+    model = VectorSiamese(qubits_num, 3, 3, 5, 2, 16, dilation = 1, ratio_type='sqrt', mode = 'classifier', biparts_mode = 'all')
+    model.load_state_dict(torch.load(siam_save_path))
+    model.double()
+    model.to(device)
 
 # regional borders
 x_min = 0 # Fixed, won't work if changed
@@ -116,6 +133,9 @@ def get_metrics(x, y, map_mode):
         prediction, loss = separator_predict(model, device, torch_data, 1.e-3, criterion, return_loss=True)
         prediction, loss = prediction.item(), loss.item()
         return loss
+    elif map_mode == 'class_prob':
+        prediction = torch.mean(model(torch_data.to(device))).item()
+        return prediction
     elif map_mode == 'trace_loss':
         prediction, loss = trace_predict(torch_data, trace_thresh, criterion, return_measure_value=True)
         prediction, loss = prediction.item(), loss.item()
@@ -183,7 +203,7 @@ ax.plot([x_12 - res_x, x_12 - res_x], [y_min, y_max], color='black', linestyle='
 
 ax.axis('off')
 
-if map_mode == 'sep_loss' or map_mode == 'trace_loss':
+if map_mode == 'sep_loss' or map_mode == 'trace_loss' or map_mode == 'class_prob':
     if map_mode == 'sep_loss':
         plt.title('Separator loss map')
     elif map_mode == 'trace_loss':
@@ -201,9 +221,9 @@ if map_mode == 'sep_loss' or map_mode == 'trace_loss':
     plt.tight_layout(pad = 0.7)
 
     if log_scale:
-        plt.savefig("./plots/discord_{}_fancy_bowl_asym_map{}q_{}_loss_{}_log.png".format(map_mode, qubits_num, criterion, plot_mode)) #, bbox_extra_artists=[lgd], bbox_inches='tight')
+        plt.savefig("./plots/discord_neg_{}_fancy_bowl_asym_map{}q_{}_loss_{}_log.png".format(map_mode, qubits_num, criterion, plot_mode)) #, bbox_extra_artists=[lgd], bbox_inches='tight')
     else:
-        plt.savefig("./plots/discord_{}_fancy_bowl_asym_map{}q_{}_loss_{}.png".format(map_mode, qubits_num, criterion, plot_mode)) #, bbox_extra_artists=[lgd], bbox_inches='tight')
+        plt.savefig("./plots/discord_neg_{}_fancy_bowl_asym_map{}q_{}_loss_{}.png".format(map_mode, qubits_num, criterion, plot_mode)) #, bbox_extra_artists=[lgd], bbox_inches='tight')
 else:
     plt.title('Analytical map')
 
