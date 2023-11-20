@@ -12,6 +12,8 @@ def test_vector_siamese(model, device, test_loader, criterion, message, confusio
     model.eval()
     model.to(device)
     test_loss = 0.
+    true_prob = 0.
+    false_prob = 0.
     correct = 0
     if bipart == 'separate':
         correct_lh = np.zeros(test_loader.dataset.bipart_num)
@@ -37,12 +39,12 @@ def test_vector_siamese(model, device, test_loader, criterion, message, confusio
                 ind = np.random.randint(0, len(model.perms))
                 data = all_perms(data, ind).double().to(device)[0]
                 ind = ind // factorial(int(round(np.log2(model.dim))) - 1)
-                output = model(data)
-                test_loss += criterion(output, torch.unsqueeze(target[:, ind], dim=1)).item()
+                output = model(data)[:, ind:ind+1]
+                target = torch.unsqueeze(target[:, ind], dim=1)
             else:
                 output = model(data)
-                test_loss += criterion(output, target).item()
 
+            test_loss += criterion(output, target).item()
             prediction = torch.zeros_like(output)
             prediction[output > decision_point] = 1
 
@@ -57,19 +59,11 @@ def test_vector_siamese(model, device, test_loader, criterion, message, confusio
                     correct_lh[i] += (prediction[:,i][output[:,i] > high_thresh].eq(target[:,i][output[:,i] > high_thresh])).sum().cpu().numpy()
                     num_lh[i] +=  (prediction[:,i][output[:,i] > high_thresh]).shape[0] + (prediction[:,i][output[:,i] < low_thresh]).shape[0]
 
-            elif bipart == 'averaged':
+            elif bipart == 'averaged' or bipart == 'single':
                 correct += prediction.eq(target).sum().item()
 
                 correct_lh += prediction[output < low_thresh].eq(target[output < low_thresh]).sum().item()
                 correct_lh += prediction[output > high_thresh].eq(target[output > high_thresh]).sum().item()
-
-                num_lh += len(output < low_thresh) + len(output > high_thresh)
-
-            elif bipart == 'single':
-                correct += prediction.eq(torch.unsqueeze(target[:, ind], dim=1)).sum().item()
-
-                correct_lh += prediction[output < low_thresh].eq(torch.unsqueeze(target[output < low_thresh][:, ind], dim=1)).sum().item()
-                correct_lh += prediction[output > high_thresh].eq(torch.unsqueeze(target[output > high_thresh][:, ind], dim=1)).sum().item()
 
                 num_lh += len(output < low_thresh) + len(output > high_thresh)
 
@@ -82,8 +76,11 @@ def test_vector_siamese(model, device, test_loader, criterion, message, confusio
                     for i, j in zip(target, prediction):
                         conf_matrix[int(i), int(j)] += 1
                 elif bipart == 'single':
-                    for i, j in zip(target[:, 0], prediction):
+                    for i, j in zip(target, prediction):
                         conf_matrix[int(i), int(j)] += 1
+
+                false_prob += output[target == 0].sum().item()
+                true_prob += output[target == 1].sum().item()
 
     if balanced_acc:
         if len(conf_matrix.shape) > 2:
@@ -91,7 +88,7 @@ def test_vector_siamese(model, device, test_loader, criterion, message, confusio
             specifity = np.array([cm[1, 1] / (cm[1, 0] + cm[1, 1]) for cm in conf_matrix]) # TN / (TN + FP)
         else:
             sensitivity = conf_matrix[0, 0] / (conf_matrix[0, 0] + conf_matrix[0, 1])
-            sensitivity = conf_matrix[1, 1] / (conf_matrix[1, 0] + conf_matrix[1, 1])
+            specifity = conf_matrix[1, 1] / (conf_matrix[1, 0] + conf_matrix[1, 1])
 
         bal_acc = 100.* (sensitivity + specifity) / 2
 
@@ -106,10 +103,17 @@ def test_vector_siamese(model, device, test_loader, criterion, message, confusio
 
     if confusion_matrix:
         print('Confusion matrix:\n{}'.format(conf_matrix))
-        if balanced_acc:
-            return test_loss, acc, conf_matrix, bal_acc
+        if len(conf_matrix.shape) > 2:
+            false_prob /= conf_matrix[:, 0, 0].sum() + conf_matrix[:, 0, 1].sum()
+            true_prob /= conf_matrix[:, 1, 1].sum() + conf_matrix[:, 1, 0].sum()
         else:
-            return test_loss, acc, conf_matrix
+            false_prob /= conf_matrix[0, 0] + conf_matrix[1, 0]
+            true_prob /= conf_matrix[1, 1] + conf_matrix[1, 0]
+
+        if balanced_acc:
+            return test_loss, acc, conf_matrix, true_prob, false_prob, bal_acc
+        else:
+            return test_loss, acc, conf_matrix, true_prob, false_prob
 
     if low_thresh == high_thresh and low_thresh == 0.5:
         if balanced_acc:

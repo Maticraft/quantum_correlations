@@ -109,7 +109,7 @@ def perform_computations(params):
         zd = cm_disc[0, 0] + cm_disc[0, 1]
         pred_zero = cm_disc[0, 0] + cm_disc[1, 0]
 
-        dapz = cm_disc[1, 1]
+        dapo = cm_disc[1, 1]
         d = cm_disc[1, 0] + cm_disc[1, 1]
         pred_one = cm_disc[0, 1] + cm_disc[1, 1]
 
@@ -125,9 +125,9 @@ def perform_computations(params):
                 zdapz / (zd + pred_zero - zdapz + 1.e-7),
                 zdapz / (pred_zero + 1.e-7),
                 zdapz / (zd + 1.e-7),
-                dapz / (d + pred_one - dapz + 1.e-7),
-                dapz / (pred_one + 1.e-7),
-                dapz / (d + 1.e-7),
+                dapo / (d + pred_one - dapo + 1.e-7),
+                dapo / (pred_one + 1.e-7),
+                dapo / (d + 1.e-7),
                 bal_acc_disc
             ]
         )

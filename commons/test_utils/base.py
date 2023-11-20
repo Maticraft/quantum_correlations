@@ -6,6 +6,8 @@ def test(model, device, test_loader, criterion, message, confusion_matrix = Fals
     model.eval()
     model.to(device)
     test_loss = 0.
+    true_prob = 0.
+    false_prob = 0.
     correct = 0
 
     if confusion_matrix or balanced_acc:
@@ -36,6 +38,9 @@ def test(model, device, test_loader, criterion, message, confusion_matrix = Fals
                 else:
                     for i, j in zip(target, prediction):
                         conf_matrix[int(i), int(j)] += 1
+                
+                false_prob += output[target == 0].sum().item()
+                true_prob += output[target == 1].sum().item()
 
     if balanced_acc:
         if len(conf_matrix.shape) > 2:
@@ -54,13 +59,20 @@ def test(model, device, test_loader, criterion, message, confusion_matrix = Fals
         message, test_loss, correct, len(test_loader.dataset), acc))
     if confusion_matrix:
         print('Confusion matrix:\n{}'.format(conf_matrix))
-        if balanced_acc:
-            return test_loss, acc, conf_matrix, bal_acc
+        if len(conf_matrix.shape) > 2:
+            false_prob /= conf_matrix[:, 0, 0].sum() + conf_matrix[:, 0, 1].sum()
+            true_prob /= conf_matrix[:, 1, 1].sum() + conf_matrix[:, 1, 0].sum()
         else:
-            return test_loss, acc, conf_matrix
+            false_prob /= conf_matrix[0, 0] + conf_matrix[0, 1]
+            true_prob /= conf_matrix[1, 1] + conf_matrix[1, 0]
+
+        if balanced_acc:
+            return test_loss, acc, conf_matrix, true_prob, false_prob, bal_acc 
+        else:
+            return test_loss, acc, conf_matrix, true_prob, false_prob
 
     if balanced_acc:
-        return test_loss, bal_acc
+        return test_loss, acc, bal_acc
     else:
         return test_loss, acc
 
