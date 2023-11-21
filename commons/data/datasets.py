@@ -7,7 +7,6 @@ from torch.utils.data import Dataset, Subset
 from qiskit.quantum_info import DensityMatrix
 
 from commons.data.savers import DICTIONARY_NAME, MATRICES_DIR_NAME
-from commons.data.savers import DICTIONARY_NAME, MATRICES_DIR_NAME
 
 
 class DensityMatricesDataset(Dataset):
