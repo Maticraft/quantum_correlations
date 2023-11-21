@@ -1,7 +1,6 @@
 /__pycache__
 /datasets
 /datasets_matlab
-/datasets_tomography
 /plots
 /results
 /models
@@ -15,4 +14,3 @@
 *.ipynb
 *.pyc
 *.mat
-*.npy
