@@ -1,5 +1,10 @@
 Repository for quantum correlations investigation with the usage of neural networks.
 
+Mandatory packages are listed in requirements.txt file. To install them run:
+```
+pip3 install -r requirements.txt
+```
+
 To generate datasets run:
 ```
 python3 run/data/generate_datasets.py

@@ -7,7 +7,6 @@
 /models
 
 *.json
-*.txt
 *.png
 *.csv
 *.npy

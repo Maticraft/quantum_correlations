@@ -1,0 +1,9 @@
+cvxpy
+qiskit
+qiskit-machine-learning
+numpy
+scipy
+matplotlib
+torch
+torchvision
+toqito
