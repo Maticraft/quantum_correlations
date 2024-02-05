@@ -1,4 +1,5 @@
 import os
+from itertools import product
 
 import numpy as np
 import scipy
@@ -7,6 +8,7 @@ from torch.utils.data import Dataset, Subset
 from qiskit.quantum_info import DensityMatrix
 
 from commons.data.savers import DICTIONARY_NAME, MATRICES_DIR_NAME
+from commons.measurement import Measurement, Kwiat
 
 
 class DensityMatricesDataset(Dataset):
@@ -55,23 +57,34 @@ class DensityMatricesDataset(Dataset):
         else:
             return len(self.dictionary)
 
-
     def __getitem__(self, idx):
         if torch.is_tensor(idx):
             idx = idx.tolist()
 
         matrix_name = os.path.join(self.root_dir, f"{self.dictionary[idx][0]}.{self.format}")
+        matrix = self.read_matrix(matrix_name)
+        tensor = self.convert_numpy_matrix_to_tensor(matrix)
+
+        label = self.read_label(idx)
+
+        return (tensor, label)
+    
+    def read_matrix(self, matrix_name):
         if self.format == "npy":
             matrix = np.load(matrix_name)
         elif self.format == 'mat':
             matrix = scipy.io.loadmat(matrix_name)['rho']
         else:
             raise ValueError('Wrong format')
+        return matrix
+    
+    def convert_numpy_matrix_to_tensor(self, matrix: np.ndarray) -> torch.Tensor:
         matrix_r = np.real(matrix)
         matrix_im = np.imag(matrix)
-
         tensor = torch.from_numpy(np.stack((matrix_r, matrix_im), axis=0))
-
+        return tensor
+    
+    def read_label(self, idx):
         label = float(self.dictionary[idx][self.label_pos])
         if label > self.threshold:
             label = 1
@@ -79,8 +92,42 @@ class DensityMatricesDataset(Dataset):
             label = 0
         label = torch.tensor(label).double()
         label = label.unsqueeze(0)
+        return label
+    
 
-        return (tensor, label)
+class MeasurementDataset(DensityMatricesDataset):
+    def __init__(self, dictionary, root_dir, metrics, threshold, data_limit = None, format = "npy", delimiter = ', ', return_density_matrix = False):
+        super().__init__(dictionary, root_dir, metrics, threshold, data_limit = data_limit, format = format, delimiter = delimiter)
+        self.return_density_matrix = return_density_matrix
+
+    def __getitem__(self, idx):
+        matrix_name = os.path.join(self.root_dir, f"{self.dictionary[idx][0]}.{self.format}")
+        matrix = self.read_matrix(matrix_name)
+        rho = self.convert_numpy_matrix_to_tensor(matrix)
+
+        matrix_dim = matrix.shape[0]
+        # reshape density matrix from (matrix_dim, matrix_dim) to (2, 2, ..., 2) (2*log2(matrix_dim) times)
+        num_qubits = int(np.log2(matrix_dim))
+        matrix = matrix.reshape([2]*(2*num_qubits))
+
+        measurements = self._get_all_measurements(matrix)
+        tensor = torch.from_numpy(measurements)
+        label = self.read_label(idx)
+
+        if not self.return_density_matrix:
+            return (tensor, label)
+        return (rho, tensor, label)
+    
+    def _get_all_measurements(self, rho_in):
+        num_qubits = len(rho_in.shape)//2
+        measurement = Measurement(Kwiat, num_qubits)
+        m_all = np.array([measurement.measure(rho_in, basis_indices) for basis_indices in self._get_basis_indices(num_qubits)])
+        return m_all
+    
+    def _get_basis_indices(self, num_qubits):
+        # it has to be list of all possible basis indices for given number of qubits
+        return list(product([0,1,2,3], repeat=num_qubits))
+
 
 
 class BipartitionMatricesDataset(Dataset):
@@ -106,22 +153,9 @@ class BipartitionMatricesDataset(Dataset):
 
         filename = self.read_filename(idx)
         matrix_name = os.path.join(self.root_dir, filename)
-        if self.format == "npy":
-            matrix = np.load(matrix_name)
-        elif self.format == 'mat':
-            matrix = scipy.io.loadmat(matrix_name)['rho']
-        else:
-            raise ValueError('Wrong format')
-        
-        matrix_r = np.real(matrix)
-        matrix_im = np.imag(matrix)
-
-        tensor = torch.from_numpy(np.stack((matrix_r, matrix_im), axis=0))
-
-        label = [1. if float(self.dictionary[idx][i]) > self.threshold else 0. for i in range(self.filename_pos + 1, len(self.dictionary[0]))]
-        if self.format == 'mat':
-            label = self.revert_labels(label)
-        label = torch.tensor(label).double()
+        matrix = self.read_matrix(matrix_name)
+        tensor = self.convert_numpy_matrix_to_tensor(matrix)
+        label = self.read_label(idx)
 
         return (tensor, label)
     
@@ -130,9 +164,66 @@ class BipartitionMatricesDataset(Dataset):
         if not filename.startswith('dens'):
             filename = 'dens' + filename
         return filename
+    
+    def read_matrix(self, matrix_name):
+        if self.format == "npy":
+            matrix = np.load(matrix_name)
+        elif self.format == 'mat':
+            matrix = scipy.io.loadmat(matrix_name)['rho']
+        else:
+            raise ValueError('Wrong format')
+        return matrix
+    
+    def convert_numpy_matrix_to_tensor(self, matrix):
+        matrix_r = np.real(matrix)
+        matrix_im = np.imag(matrix)
+        tensor = torch.from_numpy(np.stack((matrix_r, matrix_im), axis=0))
+        return tensor
+    
+    def read_label(self, idx):
+        label = [1. if float(self.dictionary[idx][i]) > self.threshold else 0. for i in range(self.filename_pos + 1, len(self.dictionary[0]))]
+        if self.format == 'mat':
+            label = self.revert_labels(label)
+        label = torch.tensor(label).double()
+        return label
 
     def revert_labels(self, labels):
         return [1. if label == 0 else 0. for label in labels]
+    
+
+class BipartitionMeasurementDataset(BipartitionMatricesDataset):
+    def __init__(self, dictionary, root_dir, threshold, data_limit = None, format = "npy", filename_pos = 0, delimiter = ', ', return_density_matrix = False):
+        super().__init__(dictionary, root_dir, threshold, data_limit = data_limit, format = format, filename_pos=filename_pos, delimiter = delimiter)
+        self.return_density_matrix = return_density_matrix
+
+    def __getitem__(self, idx):
+        filename = self.read_filename(idx)
+        matrix_name = os.path.join(self.root_dir, filename)
+        matrix = self.read_matrix(matrix_name)
+        rho = self.convert_numpy_matrix_to_tensor(matrix)
+
+        matrix_dim = matrix.shape[0]
+        # reshape density matrix from (matrix_dim, matrix_dim) to (2, 2, ..., 2) (2*log2(matrix_dim) times)
+        num_qubits = int(np.log2(matrix_dim))
+        matrix = matrix.reshape([2]*(2*num_qubits))
+
+        measurements = self._get_all_measurements(matrix)
+        tensor = torch.from_numpy(measurements)
+        label = self.read_label(idx)
+
+        if not self.return_density_matrix:
+            return (tensor, label)
+        return (rho, tensor, label)
+    
+    def _get_all_measurements(self, rho_in):
+        num_qubits = len(rho_in.shape)//2
+        measurement = Measurement(Kwiat, num_qubits)
+        m_all = np.array([measurement.measure(rho_in, basis_indices) for basis_indices in self._get_basis_indices(num_qubits)])
+        return m_all
+    
+    def _get_basis_indices(self, num_qubits):
+        # it has to be list of all possible basis indices for given number of qubits
+        return list(product([0,1,2,3], repeat=num_qubits))
     
 
 class DensityMatrixLoader:
