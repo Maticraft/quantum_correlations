@@ -48,10 +48,10 @@ bennet_dictionary_path = f'./datasets/3qbits/bennet_test/negativity_bipartitions
 bennet_root_dir = f'./datasets/3qbits/bennet_test/matrices/'
 
 if verified_dataset:
-    results_dir = './results/3qbits/nopptes_bisep_test/'
+    results_dir = './results/3qbits/nopptes_bisep/'
     model_dir = './paper_models/3qbits/nopptes_bisep/'
 else:
-    results_dir = './results/3qbits/negativity_bisep_test/'
+    results_dir = './results/3qbits/negativity_bisep/'
     model_dir = './paper_models/3qbits/negativity_bisep/'
 
 if siamese_flag:
