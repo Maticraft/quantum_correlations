@@ -700,7 +700,7 @@ def generate_mixed_reduced_train_balanced(qubits, encoded, indx = 0, ppt = True,
     new_indx = generate_mixed_reduced_train_balanced_entangled(qubits, encoded, indx, ppt, save_data_dir, examples_ratio, zero_neg, qubits_glob, discord, format, separator_loss_range)
 
     generator = MixedReducedStatesGenerator()
-    new_indx = generator.generate_circuit_matrices(int(examples_ratio*20000), qubits, qubits_glob, save_data_dir, specified_method=ReducedMethods.Separable, start_index=new_indx, encoded=encoded, discord=discord, format=format, separator_loss_range=separator_loss_range)
+    new_indx = generator.generate_circuit_matrices(examples=int(examples_ratio*20000), qubits_num=qubits, pure_state_qubits=qubits_glob, save_data_dir=save_data_dir, specified_method=ReducedMethods.Separable, start_index=new_indx, encoded=encoded, discord=discord, format=format, separator_loss_range=separator_loss_range)
     return new_indx
 
 

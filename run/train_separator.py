@@ -17,7 +17,7 @@ from commons.train_utils.separator import train_separator, train_siamese_separat
 
 
 # Common params
-data_dir = './datasets/3qbits/'
+data_dir = './datasets/4qbits/'
 metrics = 'negativity'
 
 batch_size = 128
@@ -26,7 +26,7 @@ epochs = 20
 learning_rate = 0.001
 threshold = 0.001
 
-qbits_num = 3
+qbits_num = 4
 output_dim = 2
 dilation = 1
 kernel_size = 3
@@ -49,11 +49,11 @@ gl_mixed_bal_test_loader = DataLoader(gl_mixed_bal_test_set, batch_size=batch_si
 gl_mixed_bal_test_disc_set = DensityMatricesDataset(data_dir + 'mixed_test_bal/dictionary.txt', data_dir + 'mixed_test_bal/matrices', "discord", threshold)
 gl_mixed_bal_test_disc_loader = DataLoader(gl_mixed_bal_test_disc_set, batch_size=batch_size)
 
-save_path_acc = './paper_models/3qbits/FancySeparator_l1_{}_o48_{}bacc.pt'
-save_path_loss = './paper_models/3qbits/FancySeparator_l1_{}_o48_{}bl.pt'
+save_path_acc = './paper_models/4qbits/FancySeparator_l1_{}_o48_{}bacc.pt'
+save_path_loss = './paper_models/4qbits/FancySeparator_l1_{}_o48_{}bl.pt'
 
-count_save_path = './results/3qbits/discord/l1_sep_{}_{}prediction_thresh_mixed_bal_bal_acc_log.txt'
-train_path =  './results/3qbits/discord/l1_sep_{}_{}train_loss.txt'
+count_save_path = './results/4qbits/discord/l1_sep_{}_{}prediction_thresh_mixed_bal_bal_acc_log.txt'
+train_path =  './results/4qbits/discord/l1_sep_{}_{}train_loss.txt'
 
 params0 = {
     'data_name': 'all_sep',
@@ -111,7 +111,7 @@ params7 = {
 }
 
 
-params_list = [params0, params01]
+params_list = [params0]
 
 def perform_computations(params):
     train_set = DensityMatricesDataset(data_dir + f'{params["train_dir"]}/dictionary.txt', data_dir + f'{params["train_dir"]}/matrices', metrics, threshold)

@@ -13,13 +13,14 @@ from commons.measurement import Measurement, Kwiat
 
 class DensityMatricesDataset(Dataset):
 
-    def __init__(self, dictionary, root_dir, metrics, threshold, data_limit = None, format = "npy", delimiter = ', '):
+    def __init__(self, dictionary, root_dir, metrics, threshold, data_limit = None, format = "npy", delimiter = ', ', return_metric_value = False):
         self.dictionary = load_dict(dictionary, delimiter)
         self.root_dir = root_dir
         self.metrics = metrics
         self.threshold = threshold
         self.data_limit = data_limit
         self.format = format
+        self.return_metric_value = return_metric_value
 
         if self.metrics == "global_entanglement":
             self.label_pos = 3
@@ -85,13 +86,15 @@ class DensityMatricesDataset(Dataset):
         return tensor
     
     def read_label(self, idx):
-        label = float(self.dictionary[idx][self.label_pos])
-        if label > self.threshold:
+        metric_value = float(self.dictionary[idx][self.label_pos])
+        if metric_value > self.threshold:
             label = 1
         else:
             label = 0
         label = torch.tensor(label).double()
         label = label.unsqueeze(0)
+        if self.return_metric_value:
+            return (label, metric_value)
         return label
     
 
@@ -132,7 +135,7 @@ class MeasurementDataset(DensityMatricesDataset):
 
 class BipartitionMatricesDataset(Dataset):
 
-    def __init__(self, dictionary, root_dir, threshold, data_limit = None, format = "npy", filename_pos = 0, delimiter = ', '):
+    def __init__(self, dictionary, root_dir, threshold, data_limit = None, format = "npy", filename_pos = 0, delimiter = ', ', return_metric_value = False):
         self.dictionary = load_dict(dictionary, delimiter)[:data_limit]
         self.root_dir = root_dir
         self.data_limit = data_limit
@@ -140,6 +143,7 @@ class BipartitionMatricesDataset(Dataset):
         self.threshold = threshold
         self.format = format
         self.filename_pos = filename_pos
+        self.return_metric_value = return_metric_value
 
     def __len__(self):
         if self.data_limit != None:
@@ -181,10 +185,16 @@ class BipartitionMatricesDataset(Dataset):
         return tensor
     
     def read_label(self, idx):
+        metric_value = [float(self.dictionary[idx][i]) for i in range(self.filename_pos + 1, len(self.dictionary[0]))]
         label = [1. if float(self.dictionary[idx][i]) > self.threshold else 0. for i in range(self.filename_pos + 1, len(self.dictionary[0]))]
+        
         if self.format == 'mat':
+            matric_value = self.revert_labels(matric_value)
             label = self.revert_labels(label)
         label = torch.tensor(label).double()
+        metric_value = torch.tensor(metric_value).double()
+        if self.return_metric_value:
+            return (label, metric_value)
         return label
 
     def revert_labels(self, labels):
