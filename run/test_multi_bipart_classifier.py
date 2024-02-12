@@ -68,7 +68,7 @@ model_name = 'weights05_ep10_cnn_class_best_val_loss_{}'
 
 results_file = 'weights05_ep10_class_best_val_loss_paper.txt'
 
-thresholds = [0., 1.e-4, 2.e-4, 5.e-4, 1.e-3, 2.e-3, 5.e-3, 1.e-2, 2.e-2, 5.e-2, 1.e-1]
+thresholds = [0., 1.e-4, 2.e-4, 5.e-4, 1.e-3, 2.e-3, 5.e-3, 1.e-2, 2.e-2, 5.e-2]
 
 batch_size = 128
 batch_interval = 800
