@@ -431,11 +431,16 @@ class MixedDefStatesGenerator():
     def _generate_circuit_pure_states_pairs(self, base_size, fully_entangled):
         num_q1 = random.randint(1, self.num_qubits // 2)
         num_q2 = self.num_qubits - num_q1
-        if num_q1 >= 2:
+        if num_q1 >= 2 and num_q2 >= 2:
+            m1 = random.choice([0, 3])
+        elif num_q1 >= 2:
             m1 = 3
         else:
             m1 = 0
-        if num_q2 >= 2:
+            
+        if num_q2 >= 2 and m1 == 3:
+            m2 = random.choice([0, 3])
+        elif num_q2 >= 2:
             m2 = 3
         else:
             m2 = 0

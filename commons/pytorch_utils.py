@@ -79,7 +79,7 @@ def extend_label(label, num_qubits):
 
 
 def extend_states(rhos, label, new_num_qubits):
-    rhos = torch.squeeze(rhos[:,0,:,:] + rhos[:,1,:,:]*1.j).numpy()
+    rhos = (rhos[:,0,:,:] + rhos[:,1,:,:]*1.j).numpy()
     num_qbits = int(round(np.log2(len(rhos[0]))))
 
     dm = DensityMatrix(random_statevector(2)).data
