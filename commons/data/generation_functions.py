@@ -205,6 +205,7 @@ def generate_mixed_def_train_balanced(qubits, encoded, indx = 0, save_data_dir =
         'start_index': indx,
         'format': format,
         'separator_loss_range': separator_loss_range,
+        'max_num_ps': max_num_ps,
     }
 
     generator = MixedDefStatesGenerator()

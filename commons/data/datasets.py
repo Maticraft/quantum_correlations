@@ -9,6 +9,8 @@ from qiskit.quantum_info import DensityMatrix
 
 from commons.data.savers import DICTIONARY_NAME, MATRICES_DIR_NAME
 from commons.measurement import Measurement, Kwiat
+from commons.metrics import bipartitions_num
+from commons.pytorch_utils import extend_states
 
 
 class DensityMatricesDataset(Dataset):
@@ -235,6 +237,21 @@ class BipartitionMeasurementDataset(BipartitionMatricesDataset):
         # it has to be list of all possible basis indices for given number of qubits
         return list(product([0,1,2,3], repeat=num_qubits))
     
+
+class ExtendedBipartDataset(Dataset):
+    def __init__(self, dataset, desired_num_qubits):
+        self.dataset = dataset
+        self.desired_num_qubits = desired_num_qubits
+        self.bipart_num = bipartitions_num(desired_num_qubits)
+
+    def __len__(self):
+        return len(self.dataset)
+
+    def __getitem__(self, idx):
+        tensor, label = self.dataset[idx]
+        tensor, label = extend_states(tensor.unsqueeze(0), label.unsqueeze(0), self.desired_num_qubits)
+        return (tensor.squeeze(0), label.squeeze(0))
+
 
 class DensityMatrixLoader:
     def __init__(self, path, label_idx = 6, threshold = 0.0001, format = "npy", delimiter = ', '):

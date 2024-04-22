@@ -7,7 +7,7 @@ import numpy as np
 import torch
 from torch.utils.data import DataLoader
 
-from commons.data.datasets import BipartitionMatricesDataset
+from commons.data.datasets import BipartitionMatricesDataset, ExtendedBipartDataset
 from commons.models.cnns import CNN
 
 from commons.models.separator_classifiers import FancySeparatorEnsembleClassifier
@@ -28,8 +28,8 @@ else:
     train_dictionary_path = f'./datasets/{qbits_num}qbits/train_bisep_negativity_labeled/negativity_bipartitions.txt'
     train_root_dir = f'./datasets/{qbits_num}qbits/train_bisep_negativity_labeled/matrices/'
 
-val_dictionary_path = f'./datasets/{qbits_num}qbits/val_bisep_no_pptes/negativity_bipartitions.txt'
-val_root_dir = f'./datasets/{qbits_num}qbits/val_bisep_no_pptes/matrices/'
+val_dictionary_path = f'./datasets/{qbits_num}qbits/val_bisep_no_pptes_fixed_bisep/negativity_bipartitions.txt'
+val_root_dir = f'./datasets/{qbits_num}qbits/val_bisep_no_pptes_fixed_bisep/matrices/'
 
 pure_dictionary_path = f'./datasets/{qbits_num}qbits/pure_test/negativity_bipartitions.txt'
 pure_root_dir = f'./datasets/{qbits_num}qbits/pure_test/matrices/'
@@ -55,6 +55,8 @@ ghz_root_dir = f'./datasets/{qbits_num}qbits/ghz_mixed_test/matrices/'
 w_dictionary_path = f'./datasets/{qbits_num}qbits/w_mixed_test/negativity_bipartitions.txt'
 w_root_dir = f'./datasets/{qbits_num}qbits/w_mixed_test/matrices/'
 
+qbits_num = 4
+
 separator_path = f'./paper_models/{qbits_num}qbits/FancySeparator_l1_all_sep_o48_fc4_bl.pt'
 
 if verified_dataset:
@@ -66,7 +68,7 @@ else:
 
 model_name = 'weights05_ep10_cnn_class_best_val_loss_{}'
 
-results_file = 'weights05_ep10_class_best_val_loss_paper.txt'
+results_file = 'weights05_ep10_class_best_val_loss_paper_fixed_bisep.txt'
 
 thresholds = [0., 1.e-4, 2.e-4, 5.e-4, 1.e-3, 2.e-3, 5.e-3, 1.e-2, 2.e-2, 5.e-2]
 
@@ -113,7 +115,7 @@ criterion = torch.nn.BCELoss()
 
 separator = FancySeparator(qbits_num, sep_ch, fc_layers = sep_fc_num)
 separator.double()
-separator.load_state_dict(torch.load(separator_path))
+separator.load_state_dict(torch.load(separator_path, map_location=torch.device('cpu')))
 separator.eval()
 
 model_paths = [model_dir + model_name.format(i) + '.pt' for i in range(len(thresholds) - 1)]
@@ -123,16 +125,16 @@ models = []
 for model_path in model_paths:
     model = VectorSiamese(qbits_num, train_dataset.bipart_num, 3, 5, 2, 16, ratio_type='sqrt', mode='classifier', biparts_mode='all')
     model.double()
-    model.load_state_dict(torch.load(model_path))
+    model.load_state_dict(torch.load(model_path, map_location=torch.device('cpu')))
     models.append(model)
 print('Models loaded')
 
-save_acc(results_path, '', ['Train loss', 'Train_acc', 'Validation loss', 'Validation accuracy', 'Pure loss', 'Pure accuracy', 'Mixed loss', 'Mixed accuracy'], write_mode='w')
+save_acc(results_path, '', ['Validation loss', 'Validation accuracy'], write_mode='w')
 
-train_loss, train_acc = test_multi_classifier(models, separator, thresholds, device, train_loader, criterion, "Train data set", bipart=True)
+# train_loss, train_acc = test_multi_classifier(models, separator, thresholds, device, train_loader, criterion, "Train data set", bipart=True)
 val_loss, val_acc = test_multi_classifier(models, separator, thresholds, device, val_loader, criterion, "Validation data set", bipart=True)
-pure_loss, pure_acc = test_multi_classifier(models, separator, thresholds, device, test_pure_loader, criterion, "Pure data set", bipart=True)
-mixed_loss, mixed_acc = test_multi_classifier(models, separator, thresholds, device, test_mixed_loader, criterion, "Mixed data set", bipart=True)
+# pure_loss, pure_acc = test_multi_classifier(models, separator, thresholds, device, test_pure_loader, criterion, "Pure data set", bipart=True)
+# mixed_loss, mixed_acc = test_multi_classifier(models, separator, thresholds, device, test_mixed_loader, criterion, "Mixed data set", bipart=True)
 # acin_loss, acin_acc = test_multi_classifier(models, separator, thresholds, device, test_acin_loader, criterion, "ACIN data set", bipart=True)    
 # horodecki_loss, horodecki_acc = test_multi_classifier(models, separator, thresholds, device, test_horodecki_loader, criterion, "Horodecki data set", bipart=True)
 # bennet_loss, bennet_acc = test_multi_classifier(models, separator, thresholds, device, test_bennet_loader, criterion, "Bennet data set", bipart=True)
@@ -141,4 +143,6 @@ mixed_loss, mixed_acc = test_multi_classifier(models, separator, thresholds, dev
 # w_loss, w_acc = test_multi_classifier(models, separator, thresholds, device, test_w_loader, criterion, "W data set", bipart=True)
 # save_acc(results_path, '', [train_loss, train_acc, val_loss, val_acc, pure_loss, pure_acc, mixed_loss, mixed_acc, acin_loss, acin_acc,\
 #                             horodecki_loss, horodecki_acc, bennet_loss, bennet_acc, biseparable_loss, biseparable_acc, ghz_loss, ghz_acc, w_loss, w_acc])
-save_acc(results_path, '', [train_loss, train_acc, val_loss, val_acc, pure_loss, pure_acc, mixed_loss, mixed_acc])
+
+# save_acc(results_path, '', [train_loss, train_acc, val_loss, val_acc, pure_loss, pure_acc, mixed_loss, mixed_acc])
+save_acc(results_path, '', [val_loss, val_acc])
