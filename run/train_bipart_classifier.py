@@ -11,13 +11,13 @@ from commons.test_utils.base import test
 from commons.test_utils.siamese import test_vector_siamese
 from commons.train_utils.base import train
 from commons.train_utils.siamese import train_vector_siamese
+from commons.pytorch_utils import save_acc, count_parameters
 
 import os
 
 import torch
 from torch.utils.data import DataLoader
 
-from commons.pytorch_utils import save_acc
 
 siamese_flag = False
 verified_dataset = True
@@ -56,10 +56,11 @@ else:
 
 if siamese_flag:
     model_name = 'siam_cnn_class_best_val_paper'
-    results_file = 'siam_cnn_class_best_val_paper.txt'
 else:
     model_name = 'cnn_class_best_val_paper'
-    results_file = 'cnn_class_best_val_paper.txt'
+
+results_dir = f'{results_dir}/arch_scaling_valid/'
+model_dir = f'{model_dir}/arch_scaling_valid/'
 
 batch_size = 128
 batch_interval = 800
@@ -71,7 +72,7 @@ device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 siamese_flag = False
 
-train_dataset = BipartitionMatricesDataset(train_dictionary_path, train_root_dir, 0.0001, format='npy', filename_pos=0, data_limit=560000)
+train_dataset = BipartitionMatricesDataset(train_dictionary_path, train_root_dir, 0.0001, format='npy', filename_pos=0) #, data_limit=560000)
 train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
 
 val_dataset = BipartitionMatricesDataset(val_dictionary_path, val_root_dir, 0.0001)
@@ -92,51 +93,64 @@ test_horodecki_loader = DataLoader(test_horodecki_dataset, batch_size=batch_size
 test_bennet_dataset = BipartitionMatricesDataset(bennet_dictionary_path, bennet_root_dir, 0.0001)
 test_bennet_loader = DataLoader(test_bennet_dataset, batch_size=batch_size, shuffle=True)
 
-if siamese_flag:
-    model = VectorSiamese(qbits_num, train_dataset.bipart_num, 3, 5, 2, 16, ratio_type='sqrt', mode='classifier', biparts_mode='all')
-else:
-    model = CNN(qbits_num, train_dataset.bipart_num, 3, 5, 2, 16, ratio_type='sqrt', mode='classifier')
+fc_layers = [1, 3, 5, 1, 3, 5, 1, 3, 5]
+conv_layers = [1, 1, 1, 2, 2, 2, 3, 3, 3]
+filters_ratios = [2, 4, 8, 16]
 
-model.double()
-optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
-criterion = torch.nn.BCELoss()
+for fcl_num, conv_num in zip(fc_layers, conv_layers):
+    for filter_ratio in filters_ratios:
+        if siamese_flag:
+            model = VectorSiamese(qbits_num, train_dataset.bipart_num, conv_num, fcl_num, 2, filter_ratio, ratio_type='sqrt', mode='classifier', biparts_mode='all')
+        else:
+            model = CNN(qbits_num, train_dataset.bipart_num, conv_num, fcl_num, 2, filter_ratio, ratio_type='sqrt', mode='classifier')
 
-os.makedirs(results_dir, exist_ok=True)
-os.makedirs(model_dir, exist_ok=True)
+        model.double()
+        num_params = count_parameters(model)
+        model_name_i = f'{model_name}_{fcl_num}fc_{conv_num}conv_{filter_ratio}filt_{num_params}params'
 
-model_path = model_dir + model_name + '.pt'
-results_path = results_dir + model_name + '.txt'
+        print('Model config: ')
+        print(f'FC layers: {fcl_num}, Conv layers: {conv_num}, Filters ratio: {filter_ratio}')
+        print('Total number of trainable parameters in model: ', num_params)
 
-if siamese_flag:
-    save_acc(results_path, 'Epoch', ['Train loss', 'Permutation loss', 'LO loss', 'Validation loss', 'Validation accuracy', 'Validation 2xd loss', 'Validation 2xd accuracy', 'Mixed loss', 'Mixed accuracy', 'ACIN loss', 'ACIN accuracy', 'Horodecki loss', 'Horodecki accuracy', 'Bennet loss', 'Bennet accuracy', ], write_mode='w')
-else:
-    save_acc(results_path, 'Epoch', ['Train loss', 'Validation loss', 'Validation accuracy', 'Validation 2xd loss', 'Validation 2xd accuracy', 'Mixed loss', 'Mixed accuracy', 'ACIN loss', 'ACIN accuracy', 'Horodecki loss', 'Horodecki accuracy', 'Bennet loss', 'Bennet accuracy'], write_mode='w')
+        optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
+        criterion = torch.nn.BCELoss()
 
-best_loss = 1e10
+        os.makedirs(results_dir, exist_ok=True)
+        os.makedirs(model_dir, exist_ok=True)
 
-for epoch in range(epoch_num):
-    if siamese_flag:
-        train_loss, perm_loss, loc_loss = train_vector_siamese(model, device, train_loader, optimizer, criterion, epoch, batch_interval, loc_op_flag=True, reduced_perms_num=1)
-        val_loss, val_acc = test_vector_siamese(model, device, val_loader, criterion, "Validation data set", bipart='separate', negativity_ext=False, low_thresh=0.5, high_thresh=0.5, decision_point=0.5, balanced_acc=False)
-        val_2xd_loss, val_2xd_acc = test_vector_siamese(model, device, val_2xd_loader, criterion, "Validation 2xd data set", bipart='separate', negativity_ext=False, low_thresh=0.5, high_thresh=0.5, decision_point=0.5, balanced_acc=False)
-        mixed_loss, mixed_acc = test_vector_siamese(model, device, test_mixed_loader, criterion, "Mixed data set", bipart='separate', negativity_ext=False, low_thresh=0.5, high_thresh=0.5, decision_point=0.5, balanced_acc=False)
-        acin_loss, acin_acc = test_vector_siamese(model, device, test_acin_loader, criterion, "ACIN data set", bipart='separate', negativity_ext=False, low_thresh=0.5, high_thresh=0.5, decision_point=0.5, balanced_acc=False)
-        horodecki_loss, horodecki_acc = test_vector_siamese(model, device, test_horodecki_loader, criterion, "Horodecki data set", bipart='separate', negativity_ext=False, low_thresh=0.5, high_thresh=0.5, decision_point=0.5, balanced_acc=False)
-        bennet_loss, bennet_acc = test_vector_siamese(model, device, test_bennet_loader, criterion, "Bennet data set", bipart='separate', negativity_ext=False, low_thresh=0.5, high_thresh=0.5, decision_point=0.5, balanced_acc=False)
-        save_acc(results_path, epoch, [train_loss, perm_loss, loc_loss, val_loss, val_acc, val_2xd_loss, val_2xd_acc, mixed_loss, mixed_acc, acin_loss, acin_acc, horodecki_loss, horodecki_acc, bennet_loss, bennet_acc], write_mode='a')
-    else:
-        train_loss = train(model, device, train_loader, optimizer, criterion, epoch, batch_interval)
-        val_loss, val_acc = test(model, device, val_loader, criterion, "Validation data set", bipart=True)
-        val_2xd_loss, val_2xd_acc = test(model, device, val_2xd_loader, criterion, "Validation 2xd data set", bipart=True)
-        mixed_loss, mixed_acc = test(model, device, test_mixed_loader, criterion, "Mixed data set", bipart=True)
-        acin_loss, acin_acc = test(model, device, test_acin_loader, criterion, "ACIN data set", bipart=True)    
-        horodecki_loss, horodecki_acc = test(model, device, test_horodecki_loader, criterion, "Horodecki data set", bipart=True)
-        bennet_loss, bennet_acc = test(model, device, test_bennet_loader, criterion, "Bennet data set", bipart=True)   
-        save_acc(results_path, epoch, [train_loss, val_loss, val_acc, val_2xd_loss, val_2xd_acc, mixed_loss, mixed_acc, acin_loss, acin_acc, horodecki_loss, horodecki_acc,\
-                            bennet_loss, bennet_acc])
-    
-    total_val_loss = val_loss + val_2xd_loss
+        model_path = model_dir + model_name_i + '.pt'
+        results_path = results_dir + model_name_i + '.txt'
 
-    if total_val_loss < best_loss:
-        best_loss = total_val_loss
-        torch.save(model.state_dict(), model_path)
+        if siamese_flag:
+            save_acc(results_path, 'Epoch', ['Train loss', 'Permutation loss', 'LO loss', 'Validation loss', 'Validation accuracy', 'Validation 2xd loss', 'Validation 2xd accuracy', 'Mixed loss', 'Mixed accuracy', 'ACIN loss', 'ACIN accuracy', 'Horodecki loss', 'Horodecki accuracy', 'Bennet loss', 'Bennet accuracy', ], write_mode='w')
+        else:
+            save_acc(results_path, 'Epoch', ['Train loss', 'Validation loss', 'Validation accuracy', 'Validation 2xd loss', 'Validation 2xd accuracy', 'Mixed loss', 'Mixed accuracy', 'ACIN loss', 'ACIN accuracy', 'Horodecki loss', 'Horodecki accuracy', 'Bennet loss', 'Bennet accuracy'], write_mode='w')
+
+        best_loss = 1e10
+
+        for epoch in range(epoch_num):
+            if siamese_flag:
+                train_loss, perm_loss, loc_loss = train_vector_siamese(model, device, train_loader, optimizer, criterion, epoch, batch_interval, loc_op_flag=True, reduced_perms_num=1)
+                val_loss, val_acc = test_vector_siamese(model, device, val_loader, criterion, "Validation data set", bipart='separate', negativity_ext=False, low_thresh=0.5, high_thresh=0.5, decision_point=0.5, balanced_acc=False)
+                val_2xd_loss, val_2xd_acc = test_vector_siamese(model, device, val_2xd_loader, criterion, "Validation 2xd data set", bipart='separate', negativity_ext=False, low_thresh=0.5, high_thresh=0.5, decision_point=0.5, balanced_acc=False)
+                mixed_loss, mixed_acc = test_vector_siamese(model, device, test_mixed_loader, criterion, "Mixed data set", bipart='separate', negativity_ext=False, low_thresh=0.5, high_thresh=0.5, decision_point=0.5, balanced_acc=False)
+                acin_loss, acin_acc = test_vector_siamese(model, device, test_acin_loader, criterion, "ACIN data set", bipart='separate', negativity_ext=False, low_thresh=0.5, high_thresh=0.5, decision_point=0.5, balanced_acc=False)
+                horodecki_loss, horodecki_acc = test_vector_siamese(model, device, test_horodecki_loader, criterion, "Horodecki data set", bipart='separate', negativity_ext=False, low_thresh=0.5, high_thresh=0.5, decision_point=0.5, balanced_acc=False)
+                bennet_loss, bennet_acc = test_vector_siamese(model, device, test_bennet_loader, criterion, "Bennet data set", bipart='separate', negativity_ext=False, low_thresh=0.5, high_thresh=0.5, decision_point=0.5, balanced_acc=False)
+                save_acc(results_path, epoch, [train_loss, perm_loss, loc_loss, val_loss, val_acc, val_2xd_loss, val_2xd_acc, mixed_loss, mixed_acc, acin_loss, acin_acc, horodecki_loss, horodecki_acc, bennet_loss, bennet_acc], write_mode='a')
+            else:
+                train_loss = train(model, device, train_loader, optimizer, criterion, epoch, batch_interval)
+                val_loss, val_acc = test(model, device, val_loader, criterion, "Validation data set", bipart=True)
+                val_2xd_loss, val_2xd_acc = test(model, device, val_2xd_loader, criterion, "Validation 2xd data set", bipart=True)
+                mixed_loss, mixed_acc = test(model, device, test_mixed_loader, criterion, "Mixed data set", bipart=True)
+                acin_loss, acin_acc = test(model, device, test_acin_loader, criterion, "ACIN data set", bipart=True)    
+                horodecki_loss, horodecki_acc = test(model, device, test_horodecki_loader, criterion, "Horodecki data set", bipart=True)
+                bennet_loss, bennet_acc = test(model, device, test_bennet_loader, criterion, "Bennet data set", bipart=True)   
+                save_acc(results_path, epoch, [train_loss, val_loss, val_acc, val_2xd_loss, val_2xd_acc, mixed_loss, mixed_acc, acin_loss, acin_acc, horodecki_loss, horodecki_acc,\
+                                    bennet_loss, bennet_acc])
+            
+            total_val_loss = val_loss + val_2xd_loss
+
+            if total_val_loss < best_loss:
+                best_loss = total_val_loss
+                torch.save(model.state_dict(), model_path)

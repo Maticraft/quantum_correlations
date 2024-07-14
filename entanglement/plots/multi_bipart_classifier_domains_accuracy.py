@@ -52,7 +52,6 @@ plt.rcParams.update({'font.size': 28})
 
 for plot_name, plot_idx in plots.items():
     fig, ax1 = plt.subplots(figsize=(10, 10))
-    ax2 = ax1.twinx()    
     plt.title(plot_name)
     if logscale:
         plt.xscale('log')
