@@ -250,3 +250,7 @@ def construct_simple_separable_matrix(num_qubits):
     rho = local_randomize_matrix(np.arange(num_qubits), random_rho, 2)
     t_rho = torch.from_numpy(rho.data)
     return torch.stack([t_rho.real, t_rho.imag], dim=0)
+
+
+def count_parameters(model):
+    return sum(p.numel() for p in model.parameters() if p.requires_grad)

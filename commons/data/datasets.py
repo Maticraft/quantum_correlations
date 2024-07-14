@@ -14,8 +14,7 @@ from commons.pytorch_utils import extend_states
 
 
 class DensityMatricesDataset(Dataset):
-
-def __init__(self, dictionary, root_dir, metrics, threshold, data_limit = None, format = "npy", delimiter = ', ', return_metric_value = False):
+    def __init__(self, dictionary, root_dir, metrics, threshold = 1.e-3, data_limit = None, format = "npy", delimiter = ', ', return_metric_value = False):
         self.dictionary = load_dict(dictionary, delimiter)
         self.root_dir = root_dir
         self.metrics = metrics
@@ -136,8 +135,7 @@ class MeasurementDataset(DensityMatricesDataset):
 
 
 class BipartitionMatricesDataset(Dataset):
-
-def __init__(self, dictionary, root_dir, metrics, threshold, data_limit = None, format = "npy", delimiter = ', ', return_metric_value = False):
+    def __init__(self, dictionary, root_dir, metrics, threshold = 1.e-3, data_limit = None, format = "npy", delimiter = ', ', filename_pos = 0, return_metric_value = False):
         self.dictionary = load_dict(dictionary, delimiter)[:data_limit]
         self.root_dir = root_dir
         self.data_limit = data_limit
