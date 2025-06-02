@@ -179,7 +179,7 @@ class PureStatesGenerator:
                     else:
                         self.methods[m](self.circuits[i], entangled_qbits, random_gates)
                 else:
-                    entangled_qbits = random.choice(range(2, self.num_qubits + 1))
+                    entangled_qbits = random.choice(range(2, self.num_qubits + 1)) if self.num_qubits > 1 else 1
                     self.methods[m](self.circuits[i], entangled_qbits, random_gates)
 
             params.append((m, entangled_qbits))

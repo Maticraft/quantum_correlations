@@ -204,10 +204,10 @@ def generate_mixed_def_train_balanced(qubits, encoded, indx = 0, save_data_dir =
     }
 
     generator = MixedDefStatesGenerator()
-    args['start_index'] = generator.generate_multi_mixed_matrices(**args, examples=int(examples_ratio*40000), num_pure_states="random", specified_method=[0, 3], base_size=10000, zero_neg=zero_neg, label_potent_ppt=label_potent_ppt)
-    args['start_index'] = generator.generate_multi_mixed_matrices(**args, examples=int(examples_ratio*20000), num_pure_states="random", specified_method=0, base_size=10000)
-    args['start_index'] = generator.generate_multi_mixed_matrices(**args, examples=int(examples_ratio*50000), num_pure_states="random", specified_method=3, base_size=10000, zero_neg=zero_neg, label_potent_ppt=label_potent_ppt)
-    args['start_index'] = generator.generate_multi_mixed_matrices(**args, examples=int(examples_ratio*50000), num_pure_states="random", specified_method=4, base_size=10000, zero_neg=zero_neg, label_potent_ppt=label_potent_ppt)
+    args['start_index'] = generator.generate_multi_mixed_matrices(**args, examples=int(examples_ratio*40000), num_pure_states="random", specified_method=[0, 3], base_size=int(examples_ratio*10000), zero_neg=zero_neg, label_potent_ppt=label_potent_ppt)
+    args['start_index'] = generator.generate_multi_mixed_matrices(**args, examples=int(examples_ratio*20000), num_pure_states="random", specified_method=0, base_size=int(examples_ratio*10000))
+    args['start_index'] = generator.generate_multi_mixed_matrices(**args, examples=int(examples_ratio*50000), num_pure_states="random", specified_method=3, base_size=int(examples_ratio*10000), zero_neg=zero_neg, label_potent_ppt=label_potent_ppt)
+    args['start_index'] = generator.generate_multi_mixed_matrices(**args, examples=int(examples_ratio*50000), num_pure_states="random", specified_method=4, base_size=int(examples_ratio*10000), zero_neg=zero_neg, label_potent_ppt=label_potent_ppt)
     args['start_index'] = generator.generate_multi_mixed_matrices(**args, examples=int(examples_ratio*20000), num_pure_states='random', specified_method= 'kron_sep_circ', mixing_mode='outer')
     args['start_index'] = generator.generate_multi_mixed_matrices(**args, examples=int(examples_ratio*20000), num_pure_states= 'random', specified_method= 'kron_sep_circ', mixing_mode='inner')
     args['start_index'] = generator.generate_multi_mixed_matrices(**args, examples=int(examples_ratio*20000), num_pure_states='random', specified_method= 'kron_sep_circ', mixing_mode='comb')

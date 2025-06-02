@@ -132,4 +132,4 @@ def _save_bipart_metrics(bipart_metrics, filename, dict_path):
 
 def _save_common_metrics(dictionary_path, filename, method, entangled_qbits, ro, extra_info="", ppt=False):
     with open(dictionary_path, "a") as dic:
-        dic.write(filename + DELIMITER + str(global_entanglement_bipartitions(ro, "2_qubits_concurrence")) + extra_info + "\n")
+        dic.write(filename + DELIMITER + str(global_entanglement_bipartitions(ro, "negativity")) + extra_info + "\n")

@@ -395,6 +395,7 @@ def global_entanglement_bipartitions(dens_matrix, measure = "von_Neumann", ppt =
                 biparts_out.append(measure_value)
             m += 1
 
+    m = m if m > 0 else 1
     if return_separate_outputs:
         return E/m, biparts_out
     else:

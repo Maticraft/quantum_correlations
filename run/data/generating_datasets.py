@@ -4,7 +4,7 @@ sys.path.append('./')
 from commons.data.generation_functions import *
 
 # Set number of qubits and encoded parameter
-qbits = 2
+qbits = 4
 encoded = False
 paper = 'tomography' # 'entanglement' or 'discord'
 format = 'npy'
@@ -41,8 +41,8 @@ if paper == 'discord':
     _ = generate_mixed_balanced_test_set(qbits, encoded, indx = 0, save_data_dir = 'mixed_test_bal', max_num_ps = None, discord = True, permute = False, format=format)
 
 if paper == "tomography":
-    _ = generate_train_balanced(qbits, encoded, indx = 0, label_ppt = False, save_data_dir = 'val', examples_ratio = 0.1, max_num_ps = None, zero_neg = 'none', qubits_glob = 8, biseparable=False, format=format)
-    _ = generate_train_balanced(qbits, encoded, indx = 0, label_ppt = False, save_data_dir = 'train', examples_ratio = 1., max_num_ps = None, zero_neg = 'none', qubits_glob = 8, biseparable=False, format=format)
+    _ = generate_train_balanced(qbits, encoded, indx = 0, label_ppt = False, save_data_dir = 'val', examples_ratio = 0.1, max_num_ps = None, zero_neg = 'none', qubits_glob = qbits + 6, biseparable=False, format=format)
+    _ = generate_train_balanced(qbits, encoded, indx = 0, label_ppt = False, save_data_dir = 'train', examples_ratio = 1., max_num_ps = None, zero_neg = 'none', qubits_glob = qbits + 6, biseparable=False, format=format)
 
 
 # _ = generate_acin(qbits, encoded, indx = 0, save_data_dir = 'acin_test', examples_ratio=0.1)

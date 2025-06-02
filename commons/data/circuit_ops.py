@@ -41,6 +41,8 @@ def GHZ_state(qbits, circuit):
 
 # Random control unitary gates 
 def random_entanglement(qbits, circuit, max_ctrl_gates, gates_mode = 'random'):
+    if len(qbits) < 2:
+        return
     if gates_mode == 'random':
         if max_ctrl_gates == (-1):
             n = len(qbits)
@@ -71,6 +73,8 @@ def random_entanglement(qbits, circuit, max_ctrl_gates, gates_mode = 'random'):
 
 # Random entanglement of a given pair of qubits
 def random_pair_entanglement(qbits, circuit):
+    if len(qbits) < 2:
+        return
     theta = random.uniform(0, 2*pi)
     phi = random.uniform(0, 2*pi)
     lamb = random.uniform(0, 2*pi)

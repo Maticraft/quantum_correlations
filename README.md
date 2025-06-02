@@ -26,5 +26,5 @@ Discord Datasets:
     - train_pure_separable
     - train_product
     - train_zd
-    - train_sep
+    - train_separable
     - train_non_product
