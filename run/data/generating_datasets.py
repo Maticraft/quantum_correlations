@@ -4,7 +4,7 @@ sys.path.append('./')
 from commons.data.generation_functions import *
 
 # Set number of qubits and encoded parameter
-qbits = 4
+qbits = 6
 encoded = False
 paper = 'tomography' # 'entanglement' or 'discord'
 format = 'npy'

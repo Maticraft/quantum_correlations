@@ -12,8 +12,15 @@ def generate_with_assertion(batch_size=None):
             except:
                 save_data_dir = kwargs['save_data_dir']
             if save_data_dir == None or kwargs.get('return_matrices', False):
-                return generation_function(self, *args, **kwargs)
-            
+                try:
+                    return generation_function(self, *args, **kwargs)
+                except:
+                    print("Error occurred while generating data, trying again...")
+                    try:
+                        return generation_function(self, *args, **kwargs)
+                    except:
+                        raise RuntimeError("Error occurred again while generating data, aborting...")
+
             try:
                 qubits_num = args[0]
             except:
@@ -55,8 +62,17 @@ def generate_with_assertion(batch_size=None):
             start_indx = kwargs.get('start_index', 0)
             kwargs['start_index'] = start_indx
 
+            print("Generating data with function:", generation_function.__name__)
+            print("With config:")
+            for key, value in kwargs.items():
+                print(f"  {key}: {value}")
+
             while generated_examples < desired_examples:
-                generation_function(self, *args, **kwargs)
+                try:
+                    generation_function(self, *args, **kwargs)
+                except:
+                    print("Error occurred while generating data, skipping...")
+
                 for fp in fps:
                     try:
                         with open(fp, 'r+') as dictionary:
@@ -70,8 +86,12 @@ def generate_with_assertion(batch_size=None):
                                 generated_examples -= extra_lines
                     except:
                         pass
-                
+
+                print("Generated examples:", generated_examples)
+
                 kwargs['start_index'] += batch_size
+
+            print("Generation complete\n")
             return kwargs['start_index']
 
         return _wrapper
